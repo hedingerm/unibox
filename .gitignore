@@ -1,0 +1,14 @@
+node_modules/
+out/
+dist/
+.tmp/
+*.log
+.DS_Store
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Local design canvases and planning notes
+design*/
+goals/
+.claude/worktrees/

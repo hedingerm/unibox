@@ -1,0 +1,51 @@
+name: Bug report
+description: Something doesn't work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please **don't paste real mail content, addresses, tokens or API keys** —
+        redact them. Security issues go through a [private advisory](https://github.com/hedingerm/unibox/security/advisories/new) instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. …
+        2. …
+  - type: dropdown
+    id: account
+    attributes:
+      label: Account type involved
+      multiple: true
+      options:
+        - Gmail / Google Workspace
+        - Resend
+        - Not account-specific
+  - type: input
+    id: version
+    attributes:
+      label: Unibox version
+      description: Unibox → Über Unibox (About)
+      placeholder: 0.3.3
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version and chip
+      placeholder: macOS 26.1, Apple M3
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Redacted, please.
+      render: text

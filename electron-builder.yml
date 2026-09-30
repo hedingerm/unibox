@@ -1,0 +1,37 @@
+appId: ch.hedinger.unibox
+productName: Unibox
+directories:
+  buildResources: build
+  output: dist
+files:
+  - out/**
+  - package.json
+# better-sqlite3 is a prebuilt N-API binary: it loads under Electron as-is, so
+# no electron-rebuild — it only has to stay outside the asar to be dlopen-able.
+npmRebuild: false
+asarUnpack:
+  - '**/*.node'
+# The app offers its own update by running this script — it has to travel with
+# the bundle, not only live in a clone of the repo.
+extraResources:
+  # Explizites Ziel: als blosser Pfad landet das Skript unter Resources/scripts/
+  # und die App fände es nicht — was sie stillschweigend hinnähme.
+  - from: scripts/install.sh
+    to: install.sh
+mac:
+  icon: build/icon.icns
+  category: public.app-category.productivity
+  # Ad-hoc signature: arm64 requires *some* signature to launch, and without a
+  # Developer-ID cert there is nothing to notarize anyway. Installer strips the
+  # quarantine flag instead.
+  identity: '-'
+  # Hardened runtime only matters for notarization, and combined with an ad-hoc
+  # signature its library validation would stop the unpacked better-sqlite3
+  # .node binary from loading.
+  hardenedRuntime: false
+  artifactName: ${productName}-${version}-${arch}.${ext}
+  target:
+    - target: dmg      # manual double-click install
+      arch: [arm64]
+    - target: zip      # consumed by scripts/install.sh
+      arch: [arm64]

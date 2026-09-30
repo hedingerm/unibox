@@ -1,0 +1,5387 @@
+/* Design tokens (MailFlare look, from v0.3). Components read only these, so a
+   theme is nothing more than a second set of values: the dark set below
+   overrides exactly the colours and leaves shapes, type and motion alone. */
+:root {
+  color-scheme: light;
+  /* Surfaces. The app sits on a tinted ground and its working areas are white,
+     borderless cards on it — the tint is what separates them, not rules. */
+  --bg-app: #f6f8fc;
+  --surface: #ffffff;
+  --bg: var(--surface);
+  /* Grey fill for controls and hovers on a white surface. */
+  --bg-sidebar: #f1f3f4;
+  --bg-subtle: #f8f9fa;
+  --search-bg: #e9eef6;
+  --hover: rgba(32, 33, 36, 0.06);
+  --hover-strong: rgba(32, 33, 36, 0.1);
+  --border: #dadce0;
+  --border-soft: #e3e5e8;
+  --border-faint: #eceef1;
+  --text: #202124;
+  --text-secondary: #3c4043;
+  --text-muted: #5f6368;
+  --text-faint: #80868b;
+  --text-placeholder: #9aa0a6;
+  --accent: #0b57d0;
+  --accent-hover: #0842a0;
+  /* Text and icons drawn on a solid accent fill. */
+  --accent-contrast: #ffffff;
+  /* The active nav pill and the compose button. */
+  --accent-soft: #d3e3fd;
+  --on-accent-soft: #041e49;
+  /* The selected list row: a whisper of the accent, not a fill. */
+  --accent-tint: #eef3fb;
+  --danger: #d93025;
+  --success: #188038;
+  --warning: #f9ab00;
+  --warning-bg: #fef7e0;
+  --warning-text: #b06000;
+  --star: #f4b400;
+  --compose-bar: #404040;
+  --compose-bar-text: #ffffff;
+  --violet: #5856d6;
+  --violet-text: #4b3f9e;
+  --switch-off: #c4c7c5;
+  --overlay: rgba(32, 33, 36, 0.32);
+  --tooltip-bg: rgba(32, 33, 36, 0.9);
+  --tooltip-text: #ffffff;
+  --toast-bg: #202124;
+  --toast-text: #ffffff;
+  --toast-action: #a8c7fa;
+  /* Mail bodies are always drawn on paper: sender HTML assumes a white page,
+     and recolouring it breaks more mail than it helps (Gmail does the same). */
+  --paper: #ffffff;
+  --paper-text: #202124;
+  --paper-link: #0b57d0;
+  --shadow-color: rgba(60, 64, 67, 0.12);
+  --shadow-card: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+  --shadow-compose: 0 1px 3px rgba(60, 64, 67, 0.3), 0 4px 8px 3px rgba(60, 64, 67, 0.15);
+  --shadow-popover: 0 12px 32px rgba(60, 64, 67, 0.22);
+  --shadow-dialog: 0 24px 60px rgba(32, 33, 36, 0.3);
+  /* Shapes: large and soft. Cards 20–24px, buttons 12px or a full pill. */
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  /* Every modal surface: dialogs, prompts, sheets and viewers alike. */
+  --radius-dialog: 20px;
+  --radius-pill: 999px;
+  /* Fixed by construction: 12px padding top and bottom + two 2px gaps + three
+     20px line boxes. Keep in sync with ROW_HEIGHT in
+     components/MessageList.tsx. */
+  --list-row-height: 88px;
+  --list-section-height: 28px;
+  --topbar-height: 64px;
+  /* The strip the traffic lights sit in (hiddenInset, y 9). Everything else
+     starts below it, so no row has to make room for them. */
+  --titlebar-height: 32px;
+  /* Motion. Deliberately quicker than Apple's 150/250/400: a mail list is
+     worked several times a second, and what you do often must not make you
+     wait. --dur-fast is anything answering the pointer directly, --dur-normal
+     is a surface arriving on top of the app. --ease-spring overshoots a little
+     and is reserved for a control that snaps into place; everything that just
+     appears uses --ease-out, or the app starts bouncing at you. */
+  --dur-fast: 110ms;
+  --dur-normal: 180ms;
+  --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Geist ships with the app (see main.tsx) — no web font request at runtime. */
+  --font: 'Geist Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+/* Dark mode. The attribute is always set by the app (theme.ts resolves
+   "system" through prefers-color-scheme), so one block serves both routes. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg-app: #1b1b1f;
+  --surface: #232328;
+  --bg-sidebar: #2e2e34;
+  --bg-subtle: #2a2a30;
+  --search-bg: #2e2e34;
+  --hover: rgba(232, 234, 237, 0.07);
+  --hover-strong: rgba(232, 234, 237, 0.12);
+  --border: #3c4043;
+  --border-soft: #36373b;
+  --border-faint: #2f3035;
+  --text: #e8eaed;
+  --text-secondary: #d2d4d7;
+  --text-muted: #9aa0a6;
+  --text-faint: #80868b;
+  --text-placeholder: #6f7479;
+  --accent: #a8c7fa;
+  --accent-hover: #7cacf8;
+  --accent-contrast: #062e6f;
+  --accent-soft: #0842a0;
+  --on-accent-soft: #d3e3fd;
+  --accent-tint: #28303d;
+  --danger: #f28b82;
+  --success: #81c995;
+  --warning: #fdd663;
+  --warning-bg: rgba(253, 214, 99, 0.12);
+  --warning-text: #fdd663;
+  --star: #fdd663;
+  --compose-bar: #3c4043;
+  --compose-bar-text: #e8eaed;
+  --violet: #a8a6ff;
+  --violet-text: #c6c4ff;
+  --switch-off: #5f6368;
+  --overlay: rgba(0, 0, 0, 0.55);
+  --tooltip-bg: rgba(232, 234, 237, 0.92);
+  --tooltip-text: #202124;
+  --toast-bg: #e8eaed;
+  --toast-text: #202124;
+  --toast-action: #0b57d0;
+  --shadow-color: rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 3px 1px rgba(0, 0, 0, 0.3);
+  --shadow-compose: 0 1px 3px rgba(0, 0, 0, 0.5), 0 4px 8px 3px rgba(0, 0, 0, 0.35);
+  --shadow-popover: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --shadow-dialog: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+/* macOS renders <select> as a native Aqua pop-up button and ignores the author
+   font, border and padding until the appearance is dropped, so every select in
+   the app gets the same flat control with a drawn chevron. */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  padding: 5px 24px 5px 8px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1.5 5 5 9 1.5' fill='none' stroke='%236e6e73' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  cursor: pointer;
+}
+
+select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+a {
+  color: var(--accent);
+}
+
+/* The shell: a tinted ground with the sidebar on it and, to its right, the
+   top bar over one white panel. Nothing here draws a border — the tint is
+   what separates the areas. */
+.app {
+  display: flex;
+  height: 100%;
+  padding-top: var(--titlebar-height);
+  background: var(--bg-app);
+}
+
+.app::before {
+  content: '';
+  position: fixed;
+  inset: 0 0 auto;
+  height: var(--titlebar-height);
+  -webkit-app-region: drag;
+}
+
+/* Dragging a pane edge: the cursor stays the resize cursor over whatever the
+   pointer crosses, and nothing gets text-selected on the way. */
+body.is-resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+.resize-handle {
+  position: relative;
+  flex: 0 0 auto;
+  width: 6px;
+  margin: 0 -3px;
+  z-index: 3;
+  cursor: col-resize;
+  outline: none;
+}
+
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 2px;
+  width: 2px;
+  border-radius: 1px;
+  background: transparent;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.resize-handle:hover::after,
+.resize-handle:focus-visible::after,
+body.is-resizing .resize-handle::after {
+  background: var(--accent);
+}
+
+/* Shared checkbox: square, rounded, accent when ticked. */
+.checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex-shrink: 0;
+  border: 2px solid var(--text-faint);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  display: inline-grid;
+  place-content: center;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.checkbox:hover:not(:disabled) {
+  border-color: var(--text-muted);
+}
+
+.checkbox:checked,
+.checkbox:indeterminate {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.checkbox:checked::before {
+  content: '';
+  width: 5px;
+  height: 9px;
+  margin-top: -2px;
+  border: solid var(--accent-contrast);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox:indeterminate::before {
+  content: '';
+  width: 8px;
+  height: 2px;
+  background: var(--accent-contrast);
+}
+
+.checkbox:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.checkbox:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  padding: 1px 5px;
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  box-shadow: 0 1px 0 var(--border-soft);
+}
+
+/* ------------------------------------------------------------- sidebar */
+
+.sidebar {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-app);
+  padding: 0 12px 12px;
+}
+
+/* The menu toggle and the app's name. The traffic lights sit in the strip
+   above, so this row starts flush; it still drags the window. */
+.sidebar__head {
+  height: var(--topbar-height);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 4px;
+  -webkit-app-region: drag;
+}
+
+.sidebar__head > * {
+  -webkit-app-region: no-drag;
+}
+
+.sidebar__menu {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.sidebar__menu:hover {
+  background: var(--hover);
+}
+
+.sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sidebar__brand-name {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The one primary action of the app, MailFlare's "Compose" pill. */
+.sidebar__compose {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  align-self: flex-start;
+  height: 52px;
+  margin: 4px 0 14px;
+  padding: 0 22px 0 18px;
+  border-radius: var(--radius-lg);
+  background: var(--accent-soft);
+  color: var(--on-accent-soft);
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: var(--shadow-card);
+  transition:
+    box-shadow var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+
+.sidebar__compose:hover {
+  box-shadow: var(--shadow-compose);
+  background: color-mix(in srgb, var(--accent-soft) 88%, var(--accent));
+}
+
+.sidebar__scroll {
+  flex: 1;
+  overflow-y: auto;
+  /* The pills run flush into the sidebar's left edge, so the scroller does
+     too; the rows put the padding back themselves. */
+  margin: 0 -12px;
+  padding: 0 12px 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  /* The track would eat into the padding and fight the row highlights; the
+     list still scrolls, it just does it without the chrome. */
+  scrollbar-width: none;
+}
+
+.sidebar__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.sidebar__section {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sidebar__section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px 0 20px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Dieselbe Breite wie ein Zeilen-Icon: das Chevron sitzt damit auf der Mitte
+   der Icon-Spalte und der Gruppentitel auf der Kante der Zeilen-Labels. */
+.sidebar__section-toggle {
+  width: 17px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar__section-header:hover .sidebar__section-title {
+  color: var(--text-muted);
+}
+
+.sidebar__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sidebar__section-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-faint);
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Section labels in MailFlare's style: small caps-height uppercase, spaced.
+   The full address stays in the title attribute when it has to clip. */
+.sidebar__section-title--caps {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Nav rows are pills that run flush into the left edge and round off on the
+   right — the active one filled with the soft accent. */
+.sidebar__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 36px;
+  padding: 0 12px 0 24px;
+  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  width: 100%;
+  text-align: left;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.sidebar__item:hover {
+  background: var(--hover);
+}
+
+.sidebar__item--active,
+.sidebar__item--active:hover {
+  background: var(--accent-soft);
+}
+
+.sidebar__item-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar__item--active .sidebar__item-label {
+  font-weight: 600;
+  color: var(--on-accent-soft);
+}
+
+/* Unread counts are pill badges. */
+.sidebar__count {
+  min-width: 22px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--on-accent-soft);
+  background: var(--accent-soft);
+}
+
+.sidebar__item--active .sidebar__count {
+  background: var(--surface);
+}
+
+.sidebar__footer {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 10px;
+}
+
+.sidebar__shortcuts {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-muted);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.sidebar__shortcuts:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.sidebar__shortcuts-label {
+  flex: 1;
+  text-align: left;
+}
+
+.sidebar__version {
+  margin: 0;
+  padding: 0 10px;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.sidebar > .resize-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  margin: 0;
+}
+
+.sidebar__progress {
+  font-size: 11px;
+  color: var(--text-faint);
+  padding: 0 12px 4px 24px;
+}
+
+.sidebar__reconnect {
+  font-size: 11px;
+  color: var(--danger);
+  padding: 2px 8px 6px;
+  text-align: left;
+}
+
+.sidebar__account-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin: 0 0 6px 16px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+}
+
+.sidebar__account-error--reconnect {
+  background: var(--warning-bg);
+}
+
+.sidebar__account-error-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.sidebar__account-error-detail {
+  font-size: 11px;
+  color: var(--text-faint);
+  /* The API message can be long; wrap it rather than clipping the cause. */
+  overflow-wrap: anywhere;
+}
+
+.sidebar__account-error .sidebar__reconnect {
+  padding: 2px 0 0;
+}
+
+/* The icon rail: the sidebar folded to its icons, the menu toggle on its
+   own row above the compose button. */
+.sidebar--rail {
+  width: 72px;
+  padding: 0 0 12px;
+  align-items: center;
+}
+
+.sidebar--rail .sidebar__head {
+  height: auto;
+  padding: 12px 0 6px;
+  flex-direction: column;
+}
+
+.sidebar--rail .sidebar__compose {
+  align-self: center;
+  width: 52px;
+  padding: 0;
+  justify-content: center;
+}
+
+.sidebar--rail .sidebar__scroll {
+  margin: 0;
+  padding: 0;
+  align-items: center;
+  width: 100%;
+}
+
+.sidebar--rail .sidebar__section {
+  align-items: center;
+}
+
+.sidebar--rail .sidebar__item {
+  width: 48px;
+  height: 36px;
+  padding: 0;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+}
+
+.sidebar--rail .sidebar__item-label {
+  display: none;
+}
+
+.sidebar--rail .sidebar__count {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 10px;
+  color: var(--accent-contrast);
+  background: var(--accent);
+}
+
+.sidebar__account-chip {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.sidebar__account-chip:hover,
+.sidebar__account-chip.is-active {
+  background: var(--accent-soft);
+}
+
+.sidebar__account-initial {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  /* On the account's own colour, which is data and the same in both themes. */
+  color: #ffffff;
+}
+
+.sidebar__account-initial--error {
+  box-shadow: 0 0 0 2px var(--bg-app), 0 0 0 4px var(--danger);
+}
+
+.sidebar__rail-count {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+  color: var(--accent-contrast);
+  background: var(--accent);
+}
+
+/* ---------------------------------------------------------------- main */
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* The bar over the working area: search pill and a few icons. The window has
+   no title bar, so this is also where it is dragged. */
+.topbar {
+  height: var(--topbar-height);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px 0 4px;
+  -webkit-app-region: drag;
+}
+
+.topbar > * {
+  -webkit-app-region: no-drag;
+}
+
+.topbar__icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  margin-left: auto;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.topbar__icon:hover {
+  background: var(--hover);
+}
+
+/* The working area: one white panel, rounded where it meets the sidebar. */
+.panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-top-left-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  max-width: 760px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 48px;
+  padding: 0 12px 0 18px;
+  background: var(--search-bg);
+  border-radius: var(--radius-pill);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+/* Focused, the pill lifts onto the page like MailFlare's does. */
+.search:focus-within {
+  background: var(--surface);
+  box-shadow: var(--shadow-compose);
+}
+
+.search input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-size: 15px;
+}
+
+.search input::placeholder {
+  color: var(--text-muted);
+}
+
+.search input::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
+.search__kbd {
+  flex-shrink: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
+
+.search:focus-within .search__kbd {
+  visibility: hidden;
+}
+
+.search__filters {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  max-width: 320px;
+}
+
+.search__chip {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--on-accent-soft);
+  background: var(--accent-soft);
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.search__save {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 1;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.search__save:hover {
+  color: var(--accent);
+  background: var(--hover);
+}
+
+.search__suggestions,
+.compose__suggestions {
+  position: absolute;
+  top: 52px;
+  left: 0;
+  width: 320px;
+  z-index: 20;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border-faint);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-popover);
+  max-height: 320px;
+  overflow-y: auto;
+  transform-origin: top center;
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+/* The list hangs off the input it belongs to, so it grows out of its top edge
+   instead of fading in place. */
+@starting-style {
+  .search__suggestions,
+  .compose__suggestions {
+    opacity: 0;
+    transform: scale(0.98) translateY(-4px);
+  }
+}
+
+.search__suggestion {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 13px;
+}
+
+.search__suggestion.is-active {
+  background: var(--accent-soft);
+  color: var(--on-accent-soft);
+}
+
+.search__suggestion-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search__suggestion-hint {
+  font-size: 11px;
+  opacity: 0.65;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 45%;
+}
+
+.compose__suggestions {
+  top: calc(100% - 4px);
+  left: 84px;
+  width: 320px;
+  max-width: calc(100% - 100px);
+}
+
+.sidebar__saved {
+  display: flex;
+  align-items: center;
+}
+
+.sidebar__saved .sidebar__item {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar__saved-remove {
+  border: none;
+  background: transparent;
+  color: var(--text-placeholder);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 8px 0 2px;
+  opacity: 0;
+}
+
+.sidebar__saved:hover .sidebar__saved-remove {
+  opacity: 1;
+}
+
+.sidebar__section-header--static {
+  cursor: default;
+}
+
+/* The reader's action bar, and the list's header beside it: the same height,
+   so the two read as one strip across the panel. */
+.toolbar,
+.list-header {
+  height: 56px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border-faint);
+}
+
+.toolbar__divider {
+  width: 1px;
+  height: 20px;
+  margin: 0 6px;
+  background: var(--border-soft);
+  flex-shrink: 0;
+}
+
+.toolbar__spacer {
+  flex: 1;
+}
+
+.list-header {
+  gap: 8px;
+  padding: 0 8px 0 16px;
+}
+
+.list-header__check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-left: -7px;
+  border-radius: 50%;
+}
+
+.list-header__check:hover {
+  background: var(--hover);
+}
+
+.list-header__count {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.icon-button {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.icon-button:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.icon-button[aria-expanded='true'] {
+  background: var(--hover-strong);
+}
+
+.icon-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.button-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-radius: var(--radius-pill);
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.button-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  box-shadow: var(--shadow-card);
+}
+
+.button-primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.button-secondary {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 500;
+  background: var(--surface);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.button-secondary:hover:not(:disabled) {
+  background: var(--accent-tint);
+}
+
+.button-secondary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.split {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+/* ------------------------------------------------------------ list */
+
+.list-pane {
+  flex-shrink: 0;
+  min-width: 280px;
+  /* Never so wide that the reader is squeezed to nothing. */
+  max-width: calc(100% - 360px);
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-faint);
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.list__empty {
+  padding: 32px 16px;
+  color: var(--text-faint);
+  text-align: center;
+}
+
+.list__viewport {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+/* Subtle date divider between runs of rows. Fixed height by construction, the
+   same as the rows — the windowing maths depends on both. */
+.list__section {
+  height: var(--list-section-height);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 0 16px 0 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  background: var(--surface);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/*
+ * The pinned copy of the current section's label. It is laid out first and then
+ * pulled back out of the flow by its own height, so it costs the list no space;
+ * `sticky` then holds it at the top while the rows scroll underneath.
+ */
+.list__section--pinned {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin-bottom: calc(-1 * var(--list-section-height));
+  flex: 0 0 auto;
+}
+
+/* Only the rows in view live in the DOM; the viewport carries the scroll height. */
+.list__window {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.list__more {
+  padding: 12px 16px;
+  color: var(--text-faint);
+  text-align: center;
+  font-size: 12px;
+  flex: 0 0 auto;
+}
+
+.list__row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px 12px 12px;
+  border-bottom: 1px solid var(--border-faint);
+  text-align: left;
+  width: 100%;
+  /* Fixed by construction — every line is one ellipsised run — which is what
+     makes windowing possible without measuring each row. */
+  height: var(--list-row-height);
+  box-sizing: border-box;
+  overflow: hidden;
+  cursor: pointer;
+  outline: none;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.list__row:hover {
+  background: var(--bg-subtle);
+  box-shadow: inset 0 -1px 0 var(--border-faint);
+}
+
+.list__row:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+/* Picked for an action: a whisper of the accent. */
+.list__row--selected,
+.list__row--selected:hover {
+  background: var(--accent-tint);
+}
+
+/* The one row the reader shows and j/k moves: an accent edge on the left.
+   Being picked and being current are separate channels, so they compose —
+   the cursor stays visible inside a multi-selection. */
+.list__row--focused::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  background: var(--accent);
+}
+
+.list__lead {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The checkbox shows on hover, on a picked row, and on every row while
+   several are picked — the moment a checkbox is what you reach for. */
+.list__check {
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.list__row:hover .list__check,
+.list__row--picking .list__check,
+.list__check:focus-visible {
+  opacity: 1;
+}
+
+.list__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* A conversation handed to Claude tints its own row: the row keeps its place in
+   the list and still reads as busy, which a spinner in the corner of a windowed
+   list could not do. Motion is reserved for what is actually running — a sheen
+   crosses that row once per cycle — so the two states differ in kind and not,
+   as they once did, in the tempo of the same effect. */
+.list__row--settling {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+/* Waiting its turn is the quieter state: the same wash in the muted grey the
+   list uses for anything not yet current, and it holds still. Deliberately not
+   dimmed — a row at 72% reads as disabled, and a queued row is still a row the
+   user can click, select and read. */
+.list__row--queued {
+  background: color-mix(in srgb, var(--text-faint) 10%, transparent);
+}
+
+/* The travelling sheen. It starts one band-width off the row's left edge and
+   travels far enough to leave the widest list completely; .list__row already
+   hides its overflow, so nothing shows outside. The cycle rests for the last
+   third: a sheen running without pause on three rows at once —
+   SETTLE_CONCURRENCY — would be the loudest thing in the list. */
+.list__row--settling::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -160px;
+  width: 160px;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--accent) 20%, transparent) 50%,
+    transparent 100%
+  );
+  animation: settle-sheen 2600ms cubic-bezier(0.4, 0, 0.5, 1) infinite;
+}
+
+@keyframes settle-sheen {
+  0% {
+    transform: translateX(0);
+  }
+  62%,
+  100% {
+    transform: translateX(1060px);
+  }
+}
+
+/* The sheen is decoration; the wash is the state, and it stays behind. */
+@media (prefers-reduced-motion: reduce) {
+  .list__row--settling::before {
+    display: none;
+  }
+
+  /* Everything that arrives by moving arrives at once instead. The tooltip is
+     left alone -- it only fades, and a fade is not motion. */
+  .search__suggestions,
+  .compose__suggestions,
+  .identity-popover,
+  .context-menu,
+  .toast,
+  .overlay,
+  .overlay > *,
+  .banner,
+  .switch,
+  .switch__knob {
+    transition: none;
+  }
+}
+
+/* The three lines never shrink: the row height is budgeted for exactly these
+   line boxes, and shrinking them would clip the glyphs instead of the text. */
+.list__row-top,
+.list__subject-line,
+.list__bottom {
+  flex-shrink: 0;
+  height: 20px;
+  line-height: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.list__sender {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list__row--unread .list__sender {
+  font-weight: 700;
+}
+
+.list__row--unread .list__subject {
+  font-weight: 600;
+}
+
+.list__date {
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.list__row--unread .list__date {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.list__subject {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list__unread-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.list__snippet {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The one word that tells an unfinished reply from a sent one. */
+.list__draft {
+  color: var(--danger);
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+/* The hover buttons that stand in for the date. */
+.list__actions {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: -6px -8px -6px 0;
+  flex-shrink: 0;
+}
+
+.list__action {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.list__action:hover:not(:disabled) {
+  background: var(--hover-strong);
+}
+
+.list__action:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+  border-radius: var(--radius-pill);
+  padding: 1px 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.badge--neutral {
+  color: var(--text-muted);
+  background: var(--hover);
+}
+
+/* --------------------------------------------------------- reading */
+
+.reading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--surface);
+}
+
+.reading__empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-placeholder);
+}
+
+.reading__header {
+  padding: 20px 28px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reading__subject {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.reading__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.reading__messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.message {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 28px;
+  border-bottom: 1px solid var(--border-faint);
+}
+
+.reading__expand-all {
+  display: block;
+  width: 100%;
+  padding: 6px 28px;
+  text-align: left;
+  font-size: 12px;
+  color: var(--text-faint);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border-faint);
+  cursor: pointer;
+}
+
+.reading__expand-all:hover {
+  color: var(--text-muted);
+  background: var(--bg-subtle);
+}
+
+.message-folded {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 28px;
+  border: none;
+  border-bottom: 1px solid var(--border-faint);
+  background: none;
+  text-align: left;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.message-folded:hover {
+  background: var(--bg-subtle);
+}
+
+.message-folded__from {
+  font-weight: 600;
+  flex-shrink: 0;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.message-folded--unread .message-folded__from {
+  color: var(--accent);
+}
+
+.message-folded__snippet {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.message-folded__date {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.message__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.avatar--small {
+  width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  font-size: 10px;
+}
+
+.message__from {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.message__from-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.message__from-address {
+  font-weight: 400;
+  color: var(--text-faint);
+}
+
+.message__to {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.message__date {
+  font-size: 12px;
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
+.message__blocked {
+  margin: 0 0 10px 50px;
+  padding: 8px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+}
+
+.message__blocked-text {
+  flex: 1 1 auto;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.message__body {
+  padding-left: 50px;
+  font-size: 14px;
+  line-height: 1.55;
+  overflow-x: auto;
+}
+
+/* In the dark, a mail body keeps its white page: sender HTML is written for
+   one, and dark text on our dark surface would be unreadable (Gmail does the
+   same). The page is inset where the avatar column was. */
+:root[data-theme='dark'] .message__body {
+  margin-left: 50px;
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--paper-text);
+}
+
+:root[data-theme='dark'] .message__body a {
+  color: var(--paper-link);
+}
+
+:root[data-theme='dark'] .signature-preview,
+:root[data-theme='dark'] .compose__editor .ProseMirror .raw-block {
+  background: var(--paper);
+  color: var(--paper-text);
+  border-radius: var(--radius-sm);
+}
+
+:root[data-theme='dark'] .compose__editor .ProseMirror .raw-block {
+  padding: 8px 12px;
+}
+
+.message__body img {
+  max-width: 100%;
+  height: auto;
+}
+
+.message__body table {
+  border-collapse: collapse;
+}
+
+.message__body pre {
+  white-space: pre-wrap;
+  font-family: var(--mono);
+}
+
+.message__attachments {
+  padding-left: 50px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.attachment-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  font-size: 12px;
+  background: var(--surface);
+}
+
+.attachment-chip:hover {
+  background: var(--bg-subtle);
+}
+
+.attachment-chip__size {
+  color: var(--text-faint);
+}
+
+/* ------------------------------------------------ attachment preview */
+
+.preview {
+  width: 900px;
+  max-width: 94vw;
+  height: 720px;
+  max-height: 92vh;
+}
+
+.preview__body {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-subtle);
+  overflow: auto;
+}
+
+.preview__image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.preview__frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--paper);
+}
+
+.preview__text,
+.preview__document {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 20px 24px;
+  overflow: auto;
+  background: var(--paper);
+  color: var(--paper-text);
+  font-size: 13px;
+  line-height: 1.5;
+  align-self: stretch;
+}
+
+.preview__text {
+  font-family: var(--mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.preview__notice {
+  padding: 24px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.preview__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  box-shadow: var(--shadow-card);
+}
+
+.preview__nav:disabled {
+  opacity: 0.35;
+}
+
+.preview__nav--prev {
+  left: 12px;
+}
+
+.preview__nav--next {
+  right: 12px;
+}
+
+.preview__footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.preview__meta {
+  flex: 1;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.reading__reply {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px 16px;
+}
+
+.reading__reply-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 10px 16px;
+  font-size: 13px;
+  color: var(--text-placeholder);
+  text-align: left;
+  background: var(--surface);
+}
+
+.reading__reply-button--compact {
+  flex: 0 0 auto;
+}
+
+.reading__reply-button:hover {
+  border-color: var(--accent);
+  color: var(--text-muted);
+}
+
+/* The inline reply: the same composer as the window, wearing the reply line's
+   place at the foot of the conversation. It grows upwards, and the messages
+   above it give up the space because they are the pane's flexible part. */
+.reply-inline {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  min-height: 0;
+  max-height: 62%;
+  border-top: 1px solid var(--border-soft);
+  background: var(--surface);
+  box-shadow: 0 -6px 18px var(--shadow-color);
+}
+
+.reply-inline__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-faint);
+}
+
+.reply-inline__summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+}
+
+.reply-inline__summary > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reply-inline .compose__editor {
+  min-height: 120px;
+}
+
+/* The conversation inside the composer: a lookup bar plus the thread it
+   answers, folded down to the newest message so it never takes the editor's
+   place. The quote toggle next to it works on the draft itself — what it adds
+   goes out with the mail. */
+.compose__context {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--border-faint);
+}
+
+.compose__context-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  padding: 2px 0;
+}
+
+.compose__context-toggle[aria-pressed='true'] {
+  color: var(--accent);
+}
+
+.compose__context-toggle:disabled {
+  opacity: 0.5;
+}
+
+.compose__thread {
+  max-height: 34vh;
+  overflow-y: auto;
+  border-bottom: 1px solid var(--border-faint);
+  background: var(--bg-sidebar);
+  flex-shrink: 0;
+}
+
+.compose__thread-entry {
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--border-faint);
+}
+
+.compose__thread-entry:last-child {
+  border-bottom: none;
+}
+
+.compose__thread-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  font-size: 12px;
+  background: none;
+  border: none;
+  padding: 2px 0;
+  text-align: left;
+}
+
+.compose__thread-from {
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.compose__thread-snippet {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-faint);
+}
+
+.compose__thread-date {
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
+/* Read as context, not as the reading pane: no avatar column to indent past. */
+.compose__thread .message__body,
+.compose__thread .message__attachments {
+  padding-left: 18px;
+}
+
+:root[data-theme='dark'] .compose__thread .message__body {
+  margin-left: 18px;
+  padding: 10px 12px;
+}
+
+.compose__thread .message__body {
+  font-size: 12px;
+}
+
+/* --------------------------------------------------------- overlays */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  transition: opacity var(--dur-normal) var(--ease-out);
+}
+
+/* The dim and the panel arrive together but say different things: the
+   background recedes, the panel comes forward. The panel's transform is only
+   declared in @starting-style, so it settles back to `none` -- left at
+   scale(1) it would stay a containing block for the position: fixed context
+   menus that open inside Compose. */
+.overlay > * {
+  transition:
+    opacity var(--dur-normal) var(--ease-out),
+    transform var(--dur-normal) var(--ease-out);
+}
+
+@starting-style {
+  .overlay {
+    opacity: 0;
+  }
+
+  .overlay > * {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+/* Above every other overlay: a prompt is always opened from one of them. */
+.overlay--prompt {
+  z-index: 50;
+}
+
+.prompt {
+  width: 400px;
+  max-width: 88vw;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px 24px 20px;
+  background: var(--surface);
+  border-radius: var(--radius-dialog);
+  box-shadow: var(--shadow-dialog);
+}
+
+.prompt__label {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.prompt__input {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 9px 12px;
+  font-size: 14px;
+  outline: none;
+}
+
+.prompt__input:focus {
+  border-color: var(--accent);
+}
+
+.prompt__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.prompt__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.window {
+  background: var(--surface);
+  border-radius: var(--radius-dialog);
+  box-shadow: var(--shadow-dialog);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.window__titlebar {
+  height: 56px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border-faint);
+  display: flex;
+  align-items: center;
+  padding: 0 56px 0 24px;
+  position: relative;
+  background: var(--surface);
+}
+
+.window__title {
+  font-size: 17px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compose__saved {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.reply-inline__head .compose__saved {
+  white-space: nowrap;
+}
+
+.window__close {
+  position: absolute;
+  right: 14px;
+  top: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.window__close:hover {
+  background: var(--hover);
+}
+
+/* --------------------------------------------------------- compose */
+
+.compose {
+  /* Anchors .compose__drop, which lies over the whole window. */
+  position: relative;
+}
+
+.compose__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-faint);
+  position: relative;
+}
+
+.compose__label {
+  width: 58px;
+  font-size: 12px;
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
+.compose__row input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  background: transparent;
+}
+
+/* Settled recipients read as chips; the input trails them and holds only the
+   entry still being typed. */
+.recipient-field {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.recipient-field input {
+  min-width: 160px;
+}
+
+.recipient-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  padding: 2px 3px 2px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-subtle);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.recipient-chip:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.recipient-chip.is-invalid:focus {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
+}
+
+.recipient-chip__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recipient-chip__remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
+.recipient-chip__remove:hover {
+  background: var(--hover-strong);
+  color: var(--text);
+}
+
+.recipient-chip.is-invalid {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+}
+
+.identity-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 13px;
+  background: var(--surface);
+}
+
+.identity-popover {
+  position: absolute;
+  top: 40px;
+  left: 68px;
+  z-index: 5;
+  width: 340px;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-popover);
+  padding: 6px;
+  transform-origin: top left;
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+@starting-style {
+  .identity-popover {
+    opacity: 0;
+    transform: scale(0.98) translateY(-4px);
+  }
+}
+
+.identity-popover__group {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  padding: 8px 10px 4px;
+}
+
+.identity-popover__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  width: 100%;
+  text-align: left;
+  font-size: 13px;
+}
+
+.identity-popover__item:hover {
+  background: var(--bg-subtle);
+}
+
+.identity-popover__divider {
+  height: 1px;
+  background: var(--border-faint);
+  margin: 6px 0;
+}
+
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border-faint);
+  background: var(--bg-subtle);
+}
+
+.editor-toolbar button {
+  min-width: 28px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  padding: 0 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.editor-toolbar button:hover {
+  background: var(--hover);
+}
+
+.editor-toolbar button.is-active {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+}
+
+.editor-toolbar input[type='color'] {
+  width: 26px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.compose__editor {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px;
+}
+
+.compose__editor .ProseMirror {
+  outline: none;
+  min-height: 100%;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* Tables the user builds in the draft get the editor's own grid; a signature or
+   a quoted mail is shown as it will be sent, so none of these rules reach into
+   a `.raw-block`. */
+.compose__editor .ProseMirror table:not(.raw-block table) {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.compose__editor .ProseMirror td:not(.raw-block td),
+.compose__editor .ProseMirror th:not(.raw-block th) {
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+}
+
+.compose__editor .ProseMirror img {
+  max-width: 100%;
+  /* Without this an image the width cap shrinks keeps the height its markup
+     asks for, and mail full of sized logos and avatars comes out squashed. */
+  height: auto;
+}
+
+.compose__editor .ProseMirror .raw-block {
+  /* The block is not editable, but it must not read as disabled either. */
+  cursor: default;
+}
+
+.compose__attachments {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 16px 0;
+}
+
+/* Shown while a file hovers over the composer. It covers the whole window
+   rather than a strip at the bottom, because the whole window accepts the
+   drop — and it never takes the pointer, or leaving it would count as a
+   dragleave and the hint would flicker. */
+.compose__drop {
+  position: absolute;
+  inset: 6px;
+  z-index: 5;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ------------------------------------------------------- onboarding */
+
+.onboarding {
+  width: 860px;
+  max-width: 94vw;
+  height: 620px;
+  max-height: 94vh;
+}
+
+.onboarding__body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.onboarding__rail {
+  width: 210px;
+  flex-shrink: 0;
+  background: var(--bg-app);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.onboarding__step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.onboarding__step--active {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.onboarding__bullet {
+  width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.onboarding__bullet--done {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.onboarding__content {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.onboarding__heading {
+  font-size: 19px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.onboarding__description {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.onboarding__footer {
+  border-top: 1px solid var(--border-faint);
+  padding: 12px 24px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.domain-list {
+  min-height: 0;
+  flex-shrink: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  /* let the scrollbar sit outside the cards */
+  padding-right: 4px;
+  margin-right: -4px;
+}
+
+.domain-card {
+  flex-shrink: 0;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.domain-card__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.domain-card__name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.domain-card__detail {
+  border-top: 1px solid var(--border-faint);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg-subtle);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.domain-card__detail code {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  display: block;
+  overflow-x: auto;
+}
+
+.domain-card__warning {
+  background: var(--warning-bg);
+  color: var(--warning-text);
+}
+
+.switch {
+  width: 38px;
+  height: 22px;
+  border-radius: 11px;
+  background: var(--switch-off);
+  position: relative;
+  flex-shrink: 0;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.switch--on {
+  background: var(--accent);
+}
+
+.switch__knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--surface);
+  transition: transform var(--dur-fast) var(--ease-spring);
+}
+
+.switch--on .switch__knob {
+  transform: translateX(16px);
+}
+
+/* --------------------------------------------------------- settings */
+
+.settings__section-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+
+.settings__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-faint);
+}
+
+.settings__row-label {
+  flex: 1;
+  font-size: 13px;
+}
+
+.settings__row input[type='text'] {
+  flex-shrink: 0;
+  width: 260px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  padding: 5px 8px;
+  outline: none;
+}
+
+.settings__row input[type='text']:focus {
+  border-color: var(--accent);
+}
+
+.settings__row-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings__row-sub {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field label {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.field input,
+.field textarea,
+.field select {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--surface);
+  padding: 8px 12px;
+  font-size: 13px;
+  outline: none;
+}
+
+.field select {
+  padding-right: 28px;
+  background-position: right 12px center;
+}
+
+.field input:focus,
+.field textarea:focus {
+  border-color: var(--accent);
+}
+
+/* ------------------------------------------------------------ toasts */
+
+.toast-stack {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 30;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--toast-bg);
+  color: var(--toast-text);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  font-size: 13px;
+  box-shadow: var(--shadow-popover);
+  transition:
+    opacity var(--dur-normal) var(--ease-out),
+    transform var(--dur-normal) var(--ease-out);
+}
+
+/* Toasts sit at the bottom edge and rise into view from it. No spring: a toast
+   reports a finished job, it does not celebrate one. */
+@starting-style {
+  .toast {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.toast button {
+  color: var(--toast-action);
+  font-weight: 600;
+  flex-shrink: 0;
+  padding: 4px 10px;
+  margin: -4px -6px;
+  border-radius: var(--radius-pill);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.toast button:hover {
+  background: color-mix(in srgb, var(--toast-action) 14%, transparent);
+}
+
+.toast--settle {
+  align-items: flex-start;
+  max-width: 520px;
+}
+
+.toast__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.toast__reason {
+  font-size: 12px;
+  color: color-mix(in srgb, var(--toast-text) 62%, transparent);
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 12px 0;
+  padding: 8px 8px 8px 16px;
+  border-radius: var(--radius);
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  font-size: 13px;
+  transition: opacity var(--dur-normal) var(--ease-out);
+}
+
+/* Opacity only: a banner pushes the pane below it down, and sliding a thing
+   that is already shoving the layout around reads as a glitch. */
+@starting-style {
+  .banner {
+    opacity: 0;
+  }
+}
+
+.banner--offline {
+  background: var(--hover);
+  color: var(--text-secondary);
+  justify-content: space-between;
+}
+
+.banner button {
+  font-weight: 600;
+  color: var(--accent);
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.banner button:hover {
+  background: var(--hover);
+}
+
+.error-text {
+  color: var(--danger);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.toolbar__status {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 8px 12px 0;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+}
+
+.toolbar__status-dismiss {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+/* Native `title` tooltips only surface after ~1s of hover — far too slow for a
+   toolbar that gets used constantly. `data-tip` draws the same hint ourselves,
+   with a delay we control. Keep `aria-label` on the element for screen readers. */
+[data-tip] {
+  position: relative;
+}
+
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: var(--tooltip-bg);
+  color: var(--tooltip-text);
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+/* Near the window's bottom edge the hint would be drawn off-screen, so it flips
+   above the button instead. */
+[data-tip][data-tip-above]::after {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+
+/* Beside the element instead — for the sidebar's rail, whose icons sit at
+   the window edge with nothing but their neighbours below them. */
+[data-tip][data-tip-right]::after {
+  top: 50%;
+  left: calc(100% + 8px);
+  transform: translateY(-50%);
+}
+
+[data-tip]:hover::after,
+[data-tip]:focus-visible::after {
+  opacity: 1;
+  transition-delay: 150ms;
+}
+
+/* --------------------------------------------------------- settle */
+
+.settle {
+  width: 860px;
+  max-width: 94vw;
+  height: 640px;
+  max-height: 92vh;
+}
+
+.settle__body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.settle__empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.settle__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.settle__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.settle__row--off {
+  opacity: 0.45;
+}
+
+.settle__check {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.settle__mail {
+  flex: 1;
+  min-width: 0;
+}
+
+.settle__mailhead {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.settle__from {
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.settle__account {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.settle__date {
+  flex-shrink: 0;
+}
+
+.settle__subject {
+  font-size: 13px;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.settle__reason {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.settle__target {
+  width: 230px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settle__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 18px;
+}
+
+.settle__chip--keep {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.settle__chip--trash,
+.settle__chip--spam {
+  color: var(--danger);
+}
+
+.settle__new {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--accent);
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
+.settle__select {
+  width: 100%;
+  font-size: 12px;
+  padding: 4px 24px 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface);
+}
+
+.settle__footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border-faint);
+  padding: 12px 24px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+}
+
+.settle__status {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settle__hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.settle__scope {
+  flex-shrink: 0;
+  display: flex;
+  gap: 4px;
+  padding: 8px 24px;
+  border-bottom: 1px solid var(--border-faint);
+}
+
+.settle__scope-tab {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  color: var(--text-muted);
+}
+
+.settle__scope-tab:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.settle__scope-tab--active {
+  background: var(--accent-soft);
+  color: var(--on-accent-soft);
+}
+
+.settle__scope-tab--active:hover:not(:disabled) {
+  background: var(--accent-soft);
+}
+
+.context-menu {
+  position: fixed;
+  z-index: 40;
+  min-width: 220px;
+  max-width: 320px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border-faint);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-popover);
+  transform-origin: top left;
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+/* A context menu opens under the pointer, so it unfolds from the corner it was
+   summoned at. Flyout submenus match, one selector covers both. */
+@starting-style {
+  .context-menu {
+    opacity: 0;
+    transform: scale(0.97) translateY(-2px);
+  }
+}
+
+.context-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px 6px 6px;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.context-menu__item:hover:not(:disabled),
+.context-menu__item:focus-visible {
+  background: var(--accent-soft);
+  color: var(--on-accent-soft);
+  outline: none;
+}
+
+.context-menu__item:disabled {
+  color: var(--text-placeholder);
+}
+
+.context-menu__item--danger {
+  color: var(--danger);
+}
+
+.context-menu__icon {
+  display: inline-flex;
+  width: 16px;
+  justify-content: center;
+  flex: none;
+}
+
+.context-menu__label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Icons are stroked in their own colour; on the hover row they follow the text. */
+.context-menu__item:hover:not(:disabled) svg,
+.context-menu__item:focus-visible svg {
+  stroke: currentColor;
+}
+
+/* The assistant's field. It sits in the menu rather than in a dialog because
+   the menu is what carries the place it acts on — a dialog would open with the
+   selection already behind it. */
+.context-menu__input-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px 8px;
+}
+
+.context-menu__input-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.context-menu__input {
+  width: 100%;
+  padding: 5px 7px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.context-menu__input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* The selection while the focus is elsewhere — a context menu, the toolbar.
+   Painted by the editor rather than the browser, which gives an unfocused
+   contenteditable no selection at all. */
+.selection-held {
+  background: color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+/* Where a link actually goes, shown before it is followed. Fixed to the window
+   corner the way a browser does it, and never in the way of the pointer: it
+   only ever appears while the pointer is over the message. */
+.link-status {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  z-index: 30;
+  max-width: 70vw;
+  overflow: hidden;
+  padding: 3px 9px;
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background: var(--surface);
+  border-top: 1px solid var(--border-faint);
+  border-right: 1px solid var(--border-faint);
+  border-top-right-radius: 6px;
+  pointer-events: none;
+}
+
+.context-menu__divider {
+  height: 1px;
+  margin: 5px 6px;
+  background: var(--border-faint);
+}
+
+/* The row and its flyout are one unit; `contents` keeps the row's own layout. */
+.context-menu__submenu {
+  display: contents;
+}
+
+/* Fixed rather than absolute, so the parent's scrollbar cannot clip it. */
+.context-menu--flyout {
+  z-index: 41;
+}
+
+/* The trigger stays lit while its flyout is open, even once the pointer leaves. */
+.context-menu__item[aria-expanded='true'] {
+  background: var(--accent-soft);
+  color: var(--on-accent-soft);
+}
+
+.context-menu__item[aria-expanded='true'] svg {
+  stroke: currentColor;
+}
+
+.sidebar__label-input {
+  width: calc(100% - 16px);
+  margin: 1px 8px;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+
+/* ---------------------------------------------------------- Schreibassistent */
+
+.ai-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-faint);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.ai-bar--running {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.ai-bar--error {
+  background: none;
+}
+
+.ai-bar__status {
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.ai-bar__hint {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.ai-review {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.ai-review__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-faint);
+  background: var(--bg-subtle);
+}
+
+.ai-review__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-right: auto;
+}
+
+.ai-review__link {
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.ai-review__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ai-review__equal {
+  white-space: pre-wrap;
+}
+
+/* One change is one decision, so both sides sit inside a single control. */
+.ai-review__change {
+  border-radius: 3px;
+  white-space: pre-wrap;
+  cursor: pointer;
+}
+
+.ai-review__before {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger);
+  text-decoration: line-through;
+}
+
+.ai-review__after {
+  background: color-mix(in srgb, var(--success) 16%, transparent);
+  color: var(--success);
+}
+
+/* A rejected change keeps the original: the proposal is what gets struck out. */
+.ai-review__change:not(.is-accepted) .ai-review__before {
+  background: none;
+  color: inherit;
+  text-decoration: none;
+}
+
+.ai-review__change:not(.is-accepted) .ai-review__after {
+  background: none;
+  color: var(--text-placeholder);
+  text-decoration: line-through;
+}
+
+.ai-review__foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border-faint);
+}
+
+.ai-review__hint {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.toast--ai {
+  align-items: flex-start;
+  max-width: 520px;
+}
+
+.settings__row--stacked {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings__textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 12px;
+  font-family: var(--mono);
+  line-height: 1.5;
+  resize: vertical;
+  background: var(--bg);
+}
+
+.settings__textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* ---------------------------------------------------------- snooze */
+
+/* Deliberately not an account colour: this badge says *when*, not *whose*. */
+.badge--snoozed {
+  color: var(--warning-text);
+  background: color-mix(in srgb, var(--warning) 16%, transparent);
+}
+
+.snooze__custom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+}
+
+.snooze__custom-input {
+  flex: 1;
+  min-width: 150px;
+  padding: 5px 10px;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.snooze__custom-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.snooze__custom-confirm {
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border-radius: var(--radius-pill);
+}
+
+.snooze__custom-confirm:hover {
+  background: var(--accent-hover);
+}
+
+.snooze__custom-error {
+  flex-basis: 100%;
+  font-size: 11px;
+  color: var(--danger);
+}
+
+/* The caveats belong under the choice, not in a tooltip nobody opens. */
+.snooze__hint {
+  padding: 6px 8px 2px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+/* What the draft is sent with — sign-off, template, reminder — on one
+   hairline row between the body and the bottom bar. */
+.compose__options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  padding: 6px 16px;
+  border-top: 1px solid var(--border-faint);
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+/* Signature preview in settings — a framed sample of the rendered signature,
+   scrollable so a tall HTML signature never pushes the buttons out of reach. */
+.signature-preview {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  background: var(--bg);
+  font-size: 13px;
+  line-height: 1.5;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.signature-preview img {
+  max-width: 100%;
+}
+
+/* ------------------------------------------------------- follow-ups */
+
+/* Same shape as the snooze badge, a different colour: one says when a mail
+   comes back, this one says how long an answer has been owed. */
+.badge--followup {
+  color: var(--violet-text);
+  background: color-mix(in srgb, var(--violet) 14%, transparent);
+}
+
+/* Late is the only state worth a colour of its own — a countdown that is
+   still running is information, an overdue one is a task. */
+.badge--followup-overdue {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+}
+
+.sidebar__count--overdue,
+.sidebar__item--active .sidebar__count--overdue {
+  color: var(--danger);
+}
+
+.followup-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--violet) 6%, transparent);
+}
+
+.followup-bar--overdue {
+  border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+  background: color-mix(in srgb, var(--danger) 7%, transparent);
+}
+
+.followup-bar__label {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.followup-bar__due {
+  color: var(--text-faint);
+}
+
+.followup-bar--overdue .followup-bar__due {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.followup-bar__nudges {
+  color: var(--text-faint);
+}
+
+/* Pushed to the right so the state reads first and the actions second. */
+.followup-bar__action {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  font-size: 12px;
+  color: var(--accent);
+  border-radius: var(--radius-sm);
+}
+
+.followup-bar__action:first-of-type {
+  margin-left: auto;
+}
+
+.followup-bar__action:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.compose__followup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.compose__followup-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+}
+
+.compose__followup-due {
+  color: var(--text-faint);
+}
+
+/* ── Compose & Lesen ── */
+
+/* ------------------------------------------------ floating composer */
+
+/* The window docks in the bottom-right corner and leaves the mailbox behind it
+   usable; only the large size dims the app. The container itself takes no
+   pointer events, so the empty corner around the panel still reaches the list. */
+.compose-float {
+  position: fixed;
+  right: 24px;
+  bottom: 16px;
+  z-index: 20;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.compose-float > * {
+  pointer-events: auto;
+}
+
+.compose--float {
+  width: 560px;
+  max-width: calc(100vw - 48px);
+  height: min(600px, calc(100vh - 96px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-dialog);
+  transition:
+    opacity var(--dur-normal) var(--ease-out),
+    transform var(--dur-normal) var(--ease-out);
+}
+
+@starting-style {
+  .compose--float {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+/* Folded, the window is its title bar sitting on the bottom edge. */
+.compose-float--minimized {
+  bottom: 0;
+}
+
+.compose-float--minimized .compose--float {
+  width: 320px;
+  height: auto;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+/* Large: centred over a dimmed app, for the long mail. */
+.compose-float--max {
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.compose-float__scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--overlay);
+}
+
+.compose-float--max .compose--float {
+  position: relative;
+  width: min(920px, calc(100vw - 64px));
+  height: min(86vh, 900px);
+}
+
+.compose__content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.compose__content[hidden] {
+  display: none;
+}
+
+.compose__bar {
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px 0 16px;
+  background: var(--compose-bar);
+  color: var(--compose-bar-text);
+}
+
+.compose-float--minimized .compose__bar {
+  cursor: pointer;
+}
+
+.compose__bar-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: inherit;
+}
+
+.compose__bar .compose__saved {
+  color: color-mix(in srgb, var(--compose-bar-text) 65%, transparent);
+  white-space: nowrap;
+  margin-right: 6px;
+}
+
+.compose__bar .compose__saved.error-text {
+  color: var(--danger);
+}
+
+.compose__bar-button {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: color-mix(in srgb, var(--compose-bar-text) 80%, transparent);
+}
+
+.compose__bar-button:hover {
+  background: color-mix(in srgb, var(--compose-bar-text) 14%, transparent);
+  color: var(--compose-bar-text);
+}
+
+/* Header rows: underline-less fields separated by hairlines. */
+.compose--float .compose__row,
+.reply-inline .compose__row {
+  min-height: 40px;
+  padding: 4px 16px;
+  border-bottom: 1px solid var(--border-faint);
+}
+
+.compose__row--from .identity-trigger {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 4px 6px 4px 0;
+  background: none;
+}
+
+.identity-trigger__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.compose__via {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.compose__copy-toggles {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.compose__copy-toggles button {
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.compose__copy-toggles button:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.compose__row #compose-subject {
+  font-size: 14px;
+}
+
+.compose__row #compose-subject::placeholder {
+  color: var(--text-muted);
+}
+
+.compose__option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.compose__options .compose__label {
+  width: auto;
+}
+
+.compose__options select {
+  font-size: 12px;
+  border: none;
+  background: none;
+  color: var(--text);
+}
+
+.compose__problem {
+  padding: 6px 16px 0;
+  font-size: 12px;
+}
+
+/* The bottom bar: blue split button, formatting, attach, assistant, more and
+   — apart, on the right — the bin. */
+.compose__bottom {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 10px 12px 16px;
+  flex-shrink: 0;
+}
+
+.compose__bottom .icon-button {
+  width: 32px;
+  height: 32px;
+}
+
+.compose__bottom-spacer {
+  flex: 1;
+}
+
+.compose__discard {
+  margin-left: 6px;
+}
+
+.compose__send {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+
+.compose__send-main,
+.compose__send-more {
+  height: 36px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: 14px;
+  font-weight: 600;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.compose__send-main {
+  padding: 0 20px 0 22px;
+  border-radius: var(--radius-pill) 0 0 var(--radius-pill);
+}
+
+.compose__send-more {
+  width: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  border-left: 1px solid color-mix(in srgb, var(--accent-contrast) 30%, transparent);
+}
+
+.compose__send-main:hover:not(:disabled),
+.compose__send-more:hover {
+  background: var(--accent-hover);
+}
+
+.compose__send-main:disabled {
+  opacity: 0.6;
+}
+
+.compose__schedule {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: 6;
+  width: 300px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-popover);
+}
+
+.compose__schedule .compose__label {
+  width: 100%;
+}
+
+.compose__schedule input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+  font-size: 13px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.compose__schedule-hint {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-faint);
+}
+
+/* The formatting row lives in the bottom bar: no band of its own, and it
+   scrolls sideways rather than wrapping when the docked window is narrow. */
+.compose__bottom .editor-toolbar {
+  flex: 1;
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.compose__bottom .editor-toolbar button {
+  flex-shrink: 0;
+  height: 30px;
+}
+
+/* The inline reply: a rounded card at the foot of the conversation, with the
+   same rows and bottom bar as the window. */
+.reply-inline {
+  margin: 8px 20px 16px;
+  border: none;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-compose);
+  overflow: hidden;
+}
+
+.reply-inline__head {
+  padding: 8px 12px 8px 16px;
+}
+
+/* ---------------------------------------------------- reading pane */
+
+.reading__title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.reading__title .reading__subject {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.reading__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.label-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 3px 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--text-muted);
+  background: var(--hover);
+}
+
+.label-chip__remove {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: inherit;
+  opacity: 0.7;
+}
+
+.label-chip__remove:hover {
+  opacity: 1;
+  background: var(--hover-strong);
+}
+
+.reading__star {
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.reading__star:hover {
+  background: var(--hover);
+}
+
+.list__lead {
+  height: auto;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.list__star {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.list__star:hover {
+  background: var(--hover);
+}
+
+.list__star:active {
+  transform: scale(0.88);
+}
+
+.message__head {
+  align-items: flex-start;
+}
+
+.message__from-name {
+  line-height: 20px;
+}
+
+.message__to {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: left;
+}
+
+.message__to:hover {
+  color: var(--text);
+}
+
+.message__to-names {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.message__date {
+  line-height: 20px;
+  padding-top: 8px;
+  white-space: nowrap;
+}
+
+.message__action {
+  width: 32px;
+  height: 32px;
+  margin-top: 2px;
+}
+
+.message__details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 2px 12px;
+  margin: 0 0 0 50px;
+  padding: 10px 12px;
+  width: fit-content;
+  max-width: calc(100% - 50px);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  font-size: 12px;
+  box-shadow: var(--shadow-popover);
+  background: var(--surface);
+}
+
+.message__details dt {
+  color: var(--text-faint);
+  text-align: right;
+}
+
+.message__details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The pill that stands for the quoted history of a reply. */
+.quote-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px 0 4px;
+  padding: 0 8px;
+  height: 14px;
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  color: var(--text-muted);
+  background: var(--hover-strong);
+}
+
+.quote-toggle:hover {
+  background: var(--border);
+}
+
+/* On the white mail page in the dark, the pill follows the page, not the app. */
+:root[data-theme='dark'] .message__body .quote-toggle {
+  color: color-mix(in srgb, var(--paper-text) 70%, transparent);
+  background: color-mix(in srgb, var(--paper-text) 12%, var(--paper));
+}
+
+.message__quote {
+  color: var(--text-muted);
+}
+
+:root[data-theme='dark'] .message__quote {
+  color: color-mix(in srgb, var(--paper-text) 75%, transparent);
+}
+
+/* Earlier messages, folded to one row each. */
+.message-folded {
+  padding: 12px 28px;
+  gap: 12px;
+}
+
+.message-folded .avatar--small {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 12px;
+}
+
+/* ---------------------------------------------------- original source */
+
+.source-dialog {
+  width: min(960px, calc(100vw - 48px));
+  height: min(86vh, 900px);
+}
+
+.source-dialog__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+}
+
+.source-dialog__note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.source-dialog__raw {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  overflow: auto;
+  padding: 12px 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background: var(--bg-subtle);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre;
+  user-select: text;
+}
+
+.source-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 16px 14px;
+}
+
+/* ── Tastatur ── */
+
+/* The palette hangs from the top like a search field rather than sitting
+   centred like a question: the list grows downwards as it fills. */
+.overlay--palette {
+  align-items: flex-start;
+  padding-top: 12vh;
+  z-index: 40;
+}
+
+.palette {
+  width: 560px;
+  max-width: calc(100vw - 32px);
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-radius: var(--radius-dialog);
+  box-shadow: var(--shadow-dialog);
+  overflow: hidden;
+}
+
+.palette__field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-faint);
+}
+
+.palette__input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.palette__input::placeholder {
+  color: var(--text-placeholder);
+}
+
+.palette__list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0;
+  padding: 6px 8px 8px;
+  list-style: none;
+}
+
+.palette__section {
+  padding: 10px 12px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+}
+
+.palette__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.palette__item.is-active {
+  background: var(--accent-soft);
+  color: var(--on-accent-soft);
+}
+
+.palette__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.palette__tag {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.palette__keys,
+.shortcuts__binding {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.palette__empty {
+  padding: 24px 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+.palette__footer {
+  display: flex;
+  gap: 16px;
+  padding: 8px 18px;
+  font-size: 11px;
+  color: var(--text-faint);
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border-faint);
+}
+
+.palette__footer .kbd + .kbd {
+  margin-left: 2px;
+}
+
+.shortcuts {
+  width: 760px;
+  max-width: calc(100vw - 32px);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-radius: var(--radius-dialog);
+  box-shadow: var(--shadow-dialog);
+  overflow: hidden;
+}
+
+.shortcuts__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-faint);
+}
+
+.shortcuts__icon {
+  display: inline-flex;
+  padding: 7px;
+  border-radius: var(--radius);
+  background: var(--accent-tint);
+}
+
+.shortcuts__heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.shortcuts__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.shortcuts__subtitle {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.shortcuts__close {
+  display: inline-flex;
+  padding: 8px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.shortcuts__close:hover {
+  background: var(--hover);
+}
+
+.shortcuts__grid {
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px 32px;
+}
+
+.shortcuts__group-title {
+  margin: 0 0 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-faint);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+}
+
+.shortcuts__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.shortcuts__table td {
+  padding: 4px 0;
+}
+
+.shortcuts__label {
+  color: var(--text-secondary);
+}
+
+.shortcuts__keys {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.shortcuts__then {
+  margin: 0 4px;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.shortcuts__foot {
+  padding: 10px 24px;
+  font-size: 11px;
+  color: var(--text-faint);
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border-faint);
+}
+
+/* Says a `g` is waiting for its second key; gone again after a second. */
+.sequence-hint {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--toast-bg);
+  color: var(--toast-text);
+  font-size: 12px;
+  box-shadow: var(--shadow-popover);
+  pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+@starting-style {
+  .sequence-hint {
+    opacity: 0;
+  }
+}
+
+/* ── Admin ── */
+
+/* The Verwaltung replaces sidebar and mailbox in the window: its own nav on
+   the tinted ground, the pages as a column of white cards to its right. */
+.admin {
+  flex: 1;
+  display: flex;
+  min-width: 0;
+  height: 100%;
+  background: var(--bg-app);
+}
+
+.admin-nav {
+  width: 264px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 12px 12px 0;
+}
+
+/* Mirrors the mail sidebar's head, and drags the window. */
+.admin-nav__head {
+  height: var(--topbar-height);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 12px;
+  -webkit-app-region: drag;
+}
+
+.admin-nav__brand {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.admin-nav__back {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  margin: 4px 0 8px;
+  padding: 0 12px 0 24px;
+  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.admin-nav__back:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.admin-nav__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.admin-nav__group {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 12px;
+}
+
+.admin-nav__label {
+  padding: 8px 24px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.admin-nav__item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 38px;
+  padding: 0 12px 0 24px;
+  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  font-size: 14px;
+  text-align: left;
+  color: var(--text);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.admin-nav__item svg {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.admin-nav__item:hover {
+  background: var(--hover);
+}
+
+.admin-nav__item.is-active,
+.admin-nav__item.is-active:hover {
+  background: var(--accent-soft);
+  color: var(--on-accent-soft);
+  font-weight: 600;
+}
+
+.admin-nav__item.is-active svg {
+  color: var(--on-accent-soft);
+}
+
+.admin-main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 0 32px 48px;
+}
+
+.admin-page {
+  max-width: 880px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-page__head {
+  min-height: var(--topbar-height);
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  padding: 28px 0 8px;
+  -webkit-app-region: drag;
+}
+
+.admin-page__head > * {
+  -webkit-app-region: no-drag;
+}
+
+.admin-page__heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-page__title {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.admin-page__desc {
+  margin: 6px 0 0;
+  max-width: 640px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.admin-add {
+  flex-shrink: 0;
+  padding: 10px 20px;
+  font-size: 14px;
+}
+
+.admin-card {
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.admin-card__heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-card__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.admin-card__desc {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.admin-card .settings__row:last-child {
+  border-bottom: none;
+}
+
+.admin-empty {
+  margin: 0;
+  padding: 8px 0;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+.admin-muted {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.admin-mono,
+.admin-mono input {
+  font-family: var(--mono);
+}
+
+.admin-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Status chips: a tinted pill with an icon. */
+.admin-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.admin-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.admin-chip--success {
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+}
+
+.admin-chip--warning {
+  color: var(--warning-text);
+  background: var(--warning-bg);
+}
+
+.admin-chip--danger {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+
+.admin-chip--neutral {
+  color: var(--text-muted);
+  background: var(--hover);
+}
+
+.admin-chip--info {
+  color: var(--on-accent-soft);
+  background: var(--accent-tint);
+}
+
+.admin-filter {
+  border-radius: var(--radius-pill);
+}
+
+.admin-filter.is-active .admin-chip {
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+
+.admin-filters {
+  display: flex;
+  gap: 8px;
+}
+
+/* Rows inside a card: separated by a faint rule, never boxed. */
+.admin-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-faint);
+}
+
+.admin-row:last-child {
+  border-bottom: none;
+}
+
+.admin-row[draggable='true'] {
+  cursor: grab;
+}
+
+/* Where a dragged mailbox lands. */
+.admin-row--drop {
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+
+.admin-row--off .admin-row__main {
+  opacity: 0.55;
+}
+
+.admin-row__icon {
+  display: flex;
+  color: var(--text-muted);
+}
+
+.admin-row__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.admin-row__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.admin-row__sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.admin-row__meta {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.admin-avatar {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--on-accent-soft);
+  background: var(--accent-soft);
+}
+
+.admin-move {
+  display: flex;
+}
+
+.admin-icon-button {
+  width: 32px;
+  height: 32px;
+  color: var(--text-muted);
+}
+
+.admin-icon-button--danger:hover:not(:disabled) {
+  color: var(--danger);
+}
+
+.admin-more {
+  align-self: center;
+}
+
+/* ---- Domains */
+
+.admin-domain {
+  gap: 0;
+  padding: 16px 20px;
+}
+
+.admin-domain__row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.admin-domain__globe {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  background: var(--bg-subtle);
+}
+
+.admin-domain__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-domain__name {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.admin-domain__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.admin-domain__switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-domain .domain-card__detail {
+  margin-top: 12px;
+  border-top: none;
+  border-radius: var(--radius);
+}
+
+.admin-domain .error-text {
+  margin-top: 8px;
+}
+
+.admin-domain__auth {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-faint);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-domain__auth-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.admin-records {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* One record, tinted by what DNS said — the MailFlare authentication panel. */
+.admin-record {
+  display: grid;
+  grid-template-columns: auto minmax(160px, 1fr) minmax(0, 1.6fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+}
+
+.admin-record--success {
+  background: color-mix(in srgb, var(--success) 8%, transparent);
+  --record-color: var(--success);
+}
+
+.admin-record--warning {
+  background: var(--warning-bg);
+  --record-color: var(--warning-text);
+}
+
+.admin-record--danger {
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+  --record-color: var(--danger);
+}
+
+.admin-record--neutral {
+  background: var(--bg-subtle);
+  --record-color: var(--text-muted);
+}
+
+.admin-record__icon {
+  display: flex;
+  color: var(--record-color);
+}
+
+.admin-record__what,
+.admin-record__value {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-record__title {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.admin-record__purpose,
+.admin-record__host {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.admin-record__code {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.admin-record__code code,
+.admin-secret code {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.admin-record__status {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--record-color);
+}
+
+.admin-copy {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.admin-copy:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.admin-copy__done {
+  color: var(--success);
+}
+
+.admin-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+}
+
+.admin-banner--success {
+  background: color-mix(in srgb, var(--success) 8%, transparent);
+  color: var(--success);
+}
+
+.admin-banner--warning {
+  background: var(--warning-bg);
+  color: var(--warning-text);
+}
+
+.admin-banner--neutral {
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+}
+
+.admin-banner__icon {
+  display: flex;
+}
+
+.admin-banner__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+}
+
+.admin-banner__text strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.admin-banner__text span {
+  color: var(--text-muted);
+}
+
+.admin-inline-form {
+  display: flex;
+  gap: 10px;
+}
+
+.admin-input,
+.admin-dialog .field input,
+.admin-dialog .field select,
+.admin-address {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 9px 12px;
+  font-size: 14px;
+  outline: none;
+}
+
+.admin-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-dialog .field select {
+  padding-right: 32px;
+  background-position: right 12px center;
+}
+
+.admin-input:focus,
+.admin-dialog .field input:focus,
+.admin-dialog .field select:focus {
+  border-color: var(--accent);
+}
+
+/* ---- Dialog */
+
+.admin-dialog {
+  width: 520px;
+  max-width: 92vw;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-radius: var(--radius-dialog);
+  box-shadow: var(--shadow-dialog);
+}
+
+.admin-dialog__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 22px 24px 8px;
+}
+
+.admin-dialog__head > div {
+  flex: 1;
+}
+
+.admin-dialog__title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.admin-dialog__desc {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.admin-dialog__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 24px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.admin-dialog .field label,
+.admin-events legend {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.admin-dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 24px 20px;
+}
+
+.admin-dialog__footer .button-primary,
+.admin-dialog__footer .button-secondary {
+  padding: 9px 18px;
+}
+
+.admin-dialog__left {
+  margin-right: auto;
+}
+
+.admin-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.admin-address {
+  display: flex;
+  align-items: center;
+  padding: 0 12px 0 0;
+}
+
+.admin-dialog .admin-address input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+}
+
+.admin-address__domain {
+  color: var(--text-muted);
+}
+
+.admin-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-dialog .admin-tags input {
+  flex: 1;
+  min-width: 160px;
+}
+
+.admin-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+}
+
+.admin-card .admin-toggle-row {
+  border: none;
+  padding: 0;
+}
+
+.admin-toggle-row > span {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+}
+
+.admin-toggle-row strong {
+  font-weight: 500;
+}
+
+.admin-events {
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+}
+
+.admin-events legend {
+  padding: 0 0 8px;
+}
+
+.admin-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.admin-secret {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--bg-subtle);
+}
+
+.admin-test {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--accent-tint);
+  font-size: 13px;
+}
+
+.admin-test__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-test__list li {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-test__subject {
+  font-weight: 500;
+}
+
+.admin-steps {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ---- Overview */
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.admin-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: var(--surface);
+  text-align: left;
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.admin-tile:hover {
+  box-shadow: var(--shadow-card);
+}
+
+.admin-tile__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.admin-tile__value {
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-tile__detail {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.admin-tile--warning .admin-tile__value {
+  color: var(--warning-text);
+}
+
+.admin-tile--danger .admin-tile__value {
+  color: var(--danger);
+}
+
+/* ---- Tables and timeline */
+
+.admin-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.admin-table th {
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  border-bottom: 1px solid var(--border-faint);
+}
+
+.admin-table td {
+  padding: 10px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border-faint);
+}
+
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table td > span {
+  display: block;
+}
+
+.admin-table__strong {
+  font-weight: 500;
+}
+
+.admin-table__nowrap {
+  white-space: nowrap;
+}
+
+.admin-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-timeline__entry {
+  position: relative;
+  display: flex;
+  gap: 14px;
+  padding: 10px 0;
+}
+
+/* The line that strings the dots together. */
+.admin-timeline__entry:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 24px;
+  bottom: -10px;
+  width: 2px;
+  background: var(--border-faint);
+}
+
+.admin-timeline__dot {
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.admin-timeline__dot--success {
+  background: var(--success);
+}
+
+.admin-timeline__dot--danger {
+  background: var(--danger);
+}
+
+.admin-timeline__dot--neutral {
+  background: var(--text-faint);
+}
+
+.admin-timeline__dot--info,
+.admin-timeline__dot--warning {
+  background: var(--accent);
+}
+
+.admin-timeline__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-timeline__summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
