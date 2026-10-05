@@ -39,6 +39,8 @@ function chunk<T>(items: T[], size: number): T[][] {
 
 const INITIAL_CURSOR = 'gmail:initial'
 const INITIAL_TOTAL = 'gmail:initialTotal'
+/** Set once a reconcile has run; mailboxes from before it existed get one. */
+const RECONCILED = 'gmail:reconciled'
 
 function labelType(label: GmailLabel): 'system' | 'user' {
   return label.type === 'user' ? 'user' : 'system'
@@ -133,7 +135,20 @@ export class GmailSync {
    */
   private async importMessage(remoteId: string): Promise<boolean> {
     const known = this.store.messages.getByRemoteId(this.accountId, remoteId) !== null
-    const raw = await this.client.getMessage(remoteId, 'full')
+    let raw: Parameters<typeof parseGmailMessage>[0]
+    try {
+      raw = await this.client.getMessage(remoteId, 'full')
+    } catch (error) {
+      // Gone again by the time we ask — a draft Gmail replaced on autosave, or
+      // mail deleted for good. Its own `messagesDeleted` record may lie beyond
+      // this history page, so it is dropped here. Letting the 404 escape would
+      // read as an expired history and trigger a resync that never prunes.
+      if (error instanceof GmailApiError && error.status === 404) {
+        this.store.messages.remove(messageKey(this.accountId, remoteId))
+        return false
+      }
+      throw error
+    }
     this.persist(raw)
     return !known && this.store.messages.getByRemoteId(this.accountId, remoteId) !== null
   }
@@ -253,6 +268,39 @@ export class GmailSync {
     this.progress({ phase: 'idle', processed, total, message: null })
   }
 
+  private async listAllIds(labelId?: string): Promise<string[]> {
+    const ids: string[] = []
+    let pageToken: string | undefined
+    do {
+      const page = await this.client.listMessages({
+        pageToken,
+        maxResults: 500,
+        labelIds: labelId ? [labelId] : undefined,
+        includeSpamTrash: true
+      })
+      for (const item of page.messages ?? []) ids.push(item.id)
+      pageToken = page.nextPageToken
+    } while (pageToken)
+    return ids
+  }
+
+  /**
+   * Brings the messages already on disk back in line with Gmail. The import
+   * skips anything it holds, so after a resync this is what applies the
+   * deletions and label changes the lost history would have carried. It only
+   * lists ids — once overall, once per label — instead of fetching every
+   * message; whatever changes meanwhile is replayed by the next history run.
+   */
+  async reconcile(): Promise<void> {
+    const remote = new Map<string, string[]>()
+    for (const id of await this.listAllIds()) remote.set(id, [])
+    for (const label of this.store.labels.list(this.accountId)) {
+      for (const id of await this.listAllIds(label.remoteId)) remote.get(id)?.push(label.remoteId)
+    }
+    this.store.messages.reconcileRemote(this.accountId, remote)
+    this.store.cursors.set(this.accountId, RECONCILED, '1')
+  }
+
   /** Applies `history.list` deltas; falls back to a full resync when the cursor expired. */
   async incrementalSync(): Promise<GmailSyncResult> {
     const account = this.store.accounts.get(this.accountId)
@@ -308,6 +356,7 @@ export class GmailSync {
         this.store.accounts.update(this.accountId, { historyId: null, initialSyncDone: false })
         this.store.cursors.set(this.accountId, 'gmail:startHistoryId', null)
         await this.initialSync()
+        await this.reconcile()
         // A resync re-reads the whole mailbox: none of it is news, so it
         // reports nothing as imported.
         return { changed: [], imported: [], resynced: true }
@@ -334,7 +383,11 @@ export class GmailSync {
     // re-read: without it a signature edited in Gmail, or an alias added there,
     // would never reach a mailbox that is already imported.
     await this.syncSendAs()
-    return this.incrementalSync()
+    const result = await this.incrementalSync()
+    if (!result.resynced && !this.store.cursors.get(this.accountId, RECONCILED)) {
+      await this.reconcile()
+    }
+    return result
   }
 
   /** Fetches an attachment on first open and caches it on disk. */

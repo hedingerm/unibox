@@ -581,6 +581,23 @@ export class MessageRepo {
     return row ? toMessage(row, this.labelIdsOf(row.id)) : null
   }
 
+  /**
+   * Makes the account's messages match a complete remote listing (remote id →
+   * label ids): anything missing from it is dropped, the rest takes its labels.
+   */
+  reconcileRemote(accountId: string, remote: Map<string, string[]>): void {
+    const rows = this.db
+      .prepare('SELECT id, remote_id FROM messages WHERE account_id = ?')
+      .all(accountId) as Array<{ id: string; remote_id: string }>
+    this.db.transaction(() => {
+      for (const row of rows) {
+        const labels = remote.get(row.remote_id)
+        if (labels) this.setLabelRemoteIds(row.id, accountId, labels)
+        else this.remove(row.id)
+      }
+    })()
+  }
+
   remove(messageId: string): void {
     const row = this.db.prepare('SELECT thread_id FROM messages WHERE id = ?').get(messageId) as
       { thread_id: string } | undefined

@@ -196,6 +196,25 @@ describe('incremental sync', () => {
     expect(store.accounts.get(accountId)?.historyId).toBe(gmail.historyId)
   })
 
+  it('skips messages that vanished before they could be fetched without resyncing', async () => {
+    const { store, gmail, sync, accountId } = setup()
+    const kept = gmail.addMessage({ id: 'm1', labelIds: ['INBOX'] })
+    await sync.initialSync()
+
+    // A Gmail draft autosave: the old message id is gone before we ask for it.
+    gmail.pushHistory({ messagesAdded: [{ message: { id: 'gone', threadId: 'gone' } }] })
+    kept.labelIds = ['TRASH']
+    gmail.pushHistory({
+      labelsAdded: [{ message: { id: 'm1', threadId: 'm1', labelIds: ['TRASH'] }, labelIds: ['TRASH'] }]
+    })
+
+    const result = await sync.incrementalSync()
+    expect(result.resynced).toBe(false)
+    expect(store.messages.getByRemoteId(accountId, 'm1')?.labelIds).toEqual([
+      labelKey(accountId, SYSTEM_LABELS.trash)
+    ])
+  })
+
   it('applies remote label changes', async () => {
     const { store, gmail, sync, accountId } = setup()
     const message = gmail.addMessage({ id: 'm1', labelIds: ['INBOX', 'UNREAD'] })
@@ -232,6 +251,41 @@ describe('incremental sync', () => {
     expect(result.resynced).toBe(true)
     expect(store.messages.getByRemoteId(accountId, 'm2')).not.toBeNull()
     expect(store.accounts.get(accountId)?.initialSyncDone).toBe(true)
+  })
+
+  it('applies deletions and label changes the expired history would have carried', async () => {
+    const { store, gmail, sync, accountId } = setup()
+    gmail.addMessage({ id: 'm1', labelIds: ['INBOX'] })
+    const trashed = gmail.addMessage({ id: 'm2', labelIds: ['INBOX', 'UNREAD'] })
+    await sync.initialSync()
+
+    gmail.messages.delete('m1')
+    trashed.labelIds = ['TRASH']
+    gmail.historyExpired = true
+    await sync.incrementalSync()
+
+    expect(store.messages.getByRemoteId(accountId, 'm1')).toBeNull()
+    expect(store.messages.getByRemoteId(accountId, 'm2')?.labelIds).toEqual([
+      labelKey(accountId, SYSTEM_LABELS.trash)
+    ])
+  })
+
+  it('reconciles a mailbox imported before reconciling existed once', async () => {
+    const { store, gmail, sync, accountId } = setup()
+    gmail.addMessage({ id: 'm1', labelIds: ['INBOX'] })
+    gmail.addMessage({ id: 'm2', labelIds: ['INBOX'] })
+    await sync.initialSync()
+
+    // Stale state from the old resync: m1 is long gone at Gmail.
+    gmail.messages.delete('m1')
+    await sync.sync()
+    expect(store.messages.getByRemoteId(accountId, 'm1')).toBeNull()
+    expect(store.messages.getByRemoteId(accountId, 'm2')).not.toBeNull()
+
+    // Once is enough: from here on the history keeps it in line.
+    gmail.messages.delete('m2')
+    await sync.sync()
+    expect(store.messages.getByRemoteId(accountId, 'm2')).not.toBeNull()
   })
 })
 

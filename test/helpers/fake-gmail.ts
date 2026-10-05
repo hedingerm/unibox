@@ -327,7 +327,10 @@ export class FakeGmail {
     if (path === '/users/me/settings/sendAs') return this.json({ sendAs: this.sendAs })
 
     if (path === '/users/me/messages' && method === 'GET') {
-      const ids = [...this.messages.keys()]
+      const label = url.searchParams.get('labelIds')
+      const ids = [...this.messages.keys()].filter(
+        (id) => !label || (this.messages.get(id)!.labelIds ?? []).includes(label)
+      )
       const start = Number(url.searchParams.get('pageToken') ?? '0')
       const size = Number(url.searchParams.get('maxResults') ?? String(this.pageSize))
       const slice = ids.slice(start, start + size)
