@@ -1,7 +1,7 @@
 import { execFile, spawn } from 'node:child_process'
-import { existsSync, openSync } from 'node:fs'
+import { existsSync, mkdirSync, openSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 
 /** Where the release artifacts and the installer script come from. */
 export const UPDATE_REPO = 'hedingerm/unibox'
@@ -17,6 +17,7 @@ function candidateGhPaths(): string[] {
     '/usr/local/bin/gh',
     '/usr/bin/gh',
     join(homedir(), '.local', 'bin', 'gh'),
+    join(homedir(), '.local', 'share', 'mise', 'shims', 'gh'),
     join(homedir(), 'bin', 'gh')
   ]
 }
@@ -47,6 +48,8 @@ export function isNewerVersion(current: string, candidate: string): boolean {
 export interface UpdateCheckDeps {
   /** Version of the running app, `app.getVersion()`. */
   currentVersion: string
+  /** End of this platform's artifact name, e.g. `-arm64.zip`. */
+  assetSuffix: string
   /** Runs the GitHub CLI and resolves its stdout, or null if it failed. */
   runGh: (args: string[]) => Promise<string | null>
   /** Asks the user; only called when a newer release exists. */
@@ -67,19 +70,25 @@ export interface UpdateCheckResult {
  * something to interrupt reading mail for.
  */
 export async function checkForUpdate(deps: UpdateCheckDeps): Promise<UpdateCheckResult> {
-  const tag = await deps.runGh([
+  const output = await deps.runGh([
     'release',
     'view',
     '--repo',
     UPDATE_REPO,
     '--json',
-    'tagName',
+    'tagName,assets',
     '-q',
-    '.tagName'
+    '[.tagName] + [.assets[].name] | join("\\n")'
   ])
+  const [tag, ...assets] = (output ?? '').trim().split('\n')
   if (!tag) return { latest: null, installing: false }
   const latest = tag.trim().replace(/^v/, '')
   if (!isNewerVersion(deps.currentVersion, latest)) return { latest, installing: false }
+  // Each OS builds and attaches its own artifact, so a fresh release can lack
+  // ours for a while. Offering it then would only end in a failed install.
+  if (!assets.some((name) => name.endsWith(deps.assetSuffix))) {
+    return { latest: deps.currentVersion, installing: false }
+  }
   if (!(await deps.confirm(latest))) return { latest, installing: false }
   deps.install()
   return { latest, installing: true }
@@ -106,6 +115,7 @@ export interface InstallerOptions {
  * waits for it to exit, swaps the bundle and starts it again.
  */
 export function runInstaller(scriptPath: string, options: InstallerOptions): void {
+  mkdirSync(dirname(options.logPath), { recursive: true })
   const log = openSync(options.logPath, 'a')
   const child = spawn('/bin/bash', [scriptPath, '--relaunch'], {
     detached: true,

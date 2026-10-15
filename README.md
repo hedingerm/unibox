@@ -1,6 +1,6 @@
 # Unibox
 
-A keyboard-driven macOS desktop client that merges **Gmail / Google Workspace accounts** and
+A keyboard-driven desktop client (macOS and Linux) that merges **Gmail / Google Workspace accounts** and
 **[Resend](https://resend.com) domains** into one inbox — read, organize, search and send, all
 from a local SQLite database.
 
@@ -30,7 +30,8 @@ translated: *Settings* is *Verwaltung* in the app, *General* is *Allgemein*.
 
 ## Requirements
 
-- macOS on Apple Silicon (release builds are arm64 only)
+- macOS on Apple Silicon (arm64), or Linux x64 (tested on Omarchy/Hyprland; needs a Secret
+  Service keyring such as gnome-keyring)
 - [Bun](https://bun.sh) ≥ 1.2 and Node.js ≥ 22 to build from source
 - For Gmail: your own Google OAuth client — see [Google OAuth setup](#google-oauth-setup)
 - For Resend: a Resend API key
@@ -49,7 +50,8 @@ bun run dev
 To produce an installable app:
 
 ```bash
-bun run dist        # builds dist/Unibox-<version>-arm64.dmg and .zip
+bun run dist        # macOS: dist/Unibox-<version>-arm64.dmg and .zip
+                    # Linux: dist/Unibox-<version>-x64.tar.gz
 ```
 
 Builds are ad-hoc signed and not notarized, so Gatekeeper will complain on first launch. Open
@@ -58,7 +60,9 @@ flag: `xattr -dr com.apple.quarantine /Applications/Unibox.app`.
 
 Prebuilt releases, if available, are on the
 [Releases page](https://github.com/hedingerm/unibox/releases). `scripts/install.sh` downloads the
-latest one into `/Applications` (requires `gh`).
+latest one into `/Applications`, or on Linux into `~/.local/share/unibox` with a launcher entry
+and `~/.local/bin/unibox` (requires `gh`). Each OS builds its own artifact: release on one, then
+run `bun run release --attach` on the other.
 
 ## Google OAuth setup
 
@@ -91,7 +95,8 @@ your Mac and Google. No server run by anyone else is involved.
 6. Save it as:
 
    ```
-   ~/Library/Application Support/unibox/google-oauth.json
+   ~/Library/Application Support/unibox/google-oauth.json   # macOS
+   ~/.config/unibox/google-oauth.json                       # Linux
    ```
 
    Start Unibox once first if the folder doesn't exist yet. The downloaded file can be used

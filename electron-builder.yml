@@ -18,6 +18,9 @@ extraResources:
   # und die App fände es nicht — was sie stillschweigend hinnähme.
   - from: scripts/install.sh
     to: install.sh
+  # Linux: Icon für den .desktop-Eintrag, den install.sh anlegt.
+  - from: build/icon.png
+    to: icon.png
 mac:
   icon: build/icon.icns
   category: public.app-category.productivity
@@ -35,3 +38,15 @@ mac:
       arch: [arm64]
     - target: zip      # consumed by scripts/install.sh
       arch: [arm64]
+linux:
+  icon: build/icon.png
+  category: Office
+  # Fixed lowercase binary name: install.sh, the .desktop entry and the Wayland
+  # app id (electron-builder sets desktopName to unibox.desktop) all key on it.
+  executableName: unibox
+  artifactName: ${productName}-${version}-${arch}.${ext}
+  # A plain tarball instead of an AppImage: no FUSE needed, and install.sh can
+  # swap the unpacked directory in place for updates.
+  target:
+    - target: tar.gz
+      arch: [x64]

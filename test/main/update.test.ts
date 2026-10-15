@@ -6,11 +6,16 @@ interface Recorder {
   installs: number
 }
 
-function harness(tag: string | null, answer = true) {
+function harness(
+  tag: string | null,
+  answer = true,
+  assets = tag ? [`Unibox-${tag.replace(/^v/, '')}-arm64.zip`] : []
+) {
   const recorder: Recorder = { confirmed: [], installs: 0 }
   const deps = {
     currentVersion: '0.1.1',
-    runGh: async () => tag,
+    assetSuffix: '-arm64.zip',
+    runGh: async () => (tag === null ? null : [tag, ...assets].join('\n') + '\n'),
     confirm: async (version: string) => {
       recorder.confirmed.push(version)
       return answer
@@ -63,6 +68,14 @@ describe('checkForUpdate', () => {
     const result = await checkForUpdate(deps)
     expect(result).toEqual({ latest: '0.2.0', installing: false })
     expect(recorder.confirmed).toEqual(['0.2.0'])
+    expect(recorder.installs).toBe(0)
+  })
+
+  it('waits while the newer release has no build for this platform', async () => {
+    const { deps, recorder } = harness('v0.1.2', true, ['Unibox-0.1.2-x64.tar.gz'])
+    const result = await checkForUpdate(deps)
+    expect(result).toEqual({ latest: '0.1.1', installing: false })
+    expect(recorder.confirmed).toEqual([])
     expect(recorder.installs).toBe(0)
   })
 

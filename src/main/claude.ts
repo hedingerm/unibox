@@ -29,6 +29,7 @@ function candidatePaths(): string[] {
   return [
     join(home, '.local', 'bin', 'claude'),
     join(home, '.claude', 'local', 'claude'),
+    join(home, '.local', 'share', 'mise', 'shims', 'claude'),
     join(home, 'bin', 'claude'),
     '/opt/homebrew/bin/claude',
     '/usr/local/bin/claude',

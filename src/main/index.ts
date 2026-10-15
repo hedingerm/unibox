@@ -120,7 +120,9 @@ async function runUpdateCheck(manual: boolean): Promise<void> {
   if (!gh) {
     return report(
       'Die GitHub-CLI fehlt',
-      'Die Suche nach Updates läuft über `gh`. Installieren mit `brew install gh`, danach `gh auth login`.'
+      `Die Suche nach Updates läuft über \`gh\`. Installieren mit \`${
+        process.platform === 'darwin' ? 'brew install gh' : 'sudo pacman -S github-cli'
+      }\`, danach \`gh auth login\`.`
     )
   }
   const installer = join(process.resourcesPath, 'install.sh')
@@ -136,6 +138,7 @@ async function runUpdateCheck(manual: boolean): Promise<void> {
     const currentVersion = app.getVersion()
     const result = await checkForUpdate({
       currentVersion,
+      assetSuffix: `-${process.arch}.${process.platform === 'darwin' ? 'zip' : 'tar.gz'}`,
       runGh: createGhRunner(gh),
       confirm: async (version) =>
         (await showMessage({
@@ -149,7 +152,10 @@ async function runUpdateCheck(manual: boolean): Promise<void> {
       install: () => {
         runInstaller(installer, {
           ghPath: gh,
-          logPath: join(app.getPath('home'), 'Library', 'Logs', 'unibox-update.log')
+          logPath:
+            process.platform === 'darwin'
+              ? join(app.getPath('home'), 'Library', 'Logs', 'unibox-update.log')
+              : join(app.getPath('logs'), 'unibox-update.log')
         })
         app.quit()
       }
@@ -184,12 +190,17 @@ function installAppMenu(): void {
             click: () => void runUpdateCheck(true)
           },
           { type: 'separator' },
-          { role: 'services' },
-          { type: 'separator' },
-          { role: 'hide' },
-          { role: 'hideOthers' },
-          { role: 'unhide' },
-          { type: 'separator' },
+          // Services and hiding are macOS-only roles.
+          ...(process.platform === 'darwin'
+            ? ([
+                { role: 'services' },
+                { type: 'separator' },
+                { role: 'hide' },
+                { role: 'hideOthers' },
+                { role: 'unhide' },
+                { type: 'separator' }
+              ] satisfies Electron.MenuItemConstructorOptions[])
+            : []),
           { role: 'quit' }
         ]
       },
@@ -220,6 +231,11 @@ function createWindow(show = true): BrowserWindow {
     show: false,
     titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 16, y: 9 },
+    // macOS takes the icon from the bundle; on Linux an unpackaged run needs it here.
+    ...(process.platform === 'linux' && {
+      icon: join(app.getAppPath(), 'build', 'icon.png'),
+      autoHideMenuBar: true
+    }),
     // The first frame before the page paints; matches --bg-app of the theme.
     backgroundColor: nativeTheme.shouldUseDarkColors ? '#1b1b1f' : '#f6f8fc',
     webPreferences: {
@@ -365,6 +381,14 @@ function applyDockIcon(): void {
   if (process.platform !== 'darwin' || app.isPackaged) return
   const icon = nativeImage.createFromPath(join(app.getAppPath(), 'build', 'icon.png'))
   if (!icon.isEmpty()) app.dock?.setIcon(icon)
+}
+
+// Chromium picks the secret store by desktop environment and knows nothing of
+// tiling compositors like Hyprland: it falls back to plaintext and safeStorage
+// reports no encryption. Point it at the Secret Service (gnome-keyring) unless
+// the user chose a store themselves.
+if (process.platform === 'linux' && !app.commandLine.hasSwitch('password-store')) {
+  app.commandLine.appendSwitch('password-store', 'gnome-libsecret')
 }
 
 app.whenReady().then(() => {
