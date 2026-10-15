@@ -1,0 +1,53 @@
+name: Release (macOS)
+
+# The Linux bundle is built locally by scripts/release.sh; the macOS one needs
+# a Mac (DMG, codesign, the darwin better-sqlite3 binary), so it comes from here
+# and is attached to the same release.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to build, e.g. v0.3.7'
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+
+jobs:
+  mac:
+    runs-on: macos-latest
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: bun install --frozen-lockfile
+      # --publish never: electron-builder would otherwise publish on its own
+      # when it sees a tag in CI; the upload is gh's job, as in release.sh.
+      - run: bunx electron-vite build && bunx electron-builder --mac --publish never
+      # release.sh pushes the tag before its own build, so the release it
+      # creates may not exist yet when this job gets here.
+      - name: Wait for the release
+        run: |
+          for _ in $(seq 1 60); do
+            gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 && exit 0
+            sleep 30
+          done
+          echo "Release $TAG not found after 30 minutes." >&2
+          exit 1
+      - name: Upload
+        run: |
+          VERSION="${TAG#v}"
+          gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber \
+            dist/Unibox-$VERSION-*.dmg dist/Unibox-$VERSION-*.zip

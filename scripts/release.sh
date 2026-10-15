@@ -9,8 +9,9 @@
 #                              # ans bestehende Release hängen
 #
 # Gebaut wird nur für das eigene OS: better-sqlite3 liegt als Binary dieser
-# Plattform in node_modules. Also auf dem Mac releasen, danach unter Linux
-# `--attach` (oder umgekehrt).
+# Plattform in node_modules. Den macOS-Build hängt der Workflow
+# .github/workflows/release.yml beim Tag-Push ans Release; `--attach` bleibt
+# für den Fall, dass von Hand nachgebaut werden muss.
 #
 # Voraussetzung: sauberer Worktree, `gh auth login`.
 set -euo pipefail
@@ -102,5 +103,5 @@ artifacts "$VERSION" | xargs gh release create "v$VERSION" --repo "$REPO" --titl
 
 echo
 echo "Fertig: $(gh release view "v$VERSION" --repo "$REPO" --json url -q .url)"
-echo "Für das andere OS: dort \`bun run release --attach\`."
+echo "macOS-Build hängt .github/workflows/release.yml an (gh run watch)."
 echo "Aktualisieren mit: scripts/install.sh"

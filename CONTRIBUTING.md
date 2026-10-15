@@ -73,8 +73,10 @@ bun run release 1.0.0        # explicit version
 ```
 
 `scripts/release.sh` runs the checks, bumps `package.json`, tags `vX.Y.Z`, pushes, builds the
-arm64 bundle and uploads the `.dmg` and `.zip` to a GitHub release (requires `gh auth login` and
-a clean worktree).
+bundle for the OS it runs on and uploads it to a GitHub release (requires `gh auth login` and
+a clean worktree). The tag push also starts `.github/workflows/release.yml`, which builds the
+arm64 `.dmg` and `.zip` on a macOS runner and attaches them to the same release. To build them
+for an existing tag: `gh workflow run release.yml -f tag=vX.Y.Z`.
 
 On the install side, `scripts/install.sh` fetches the latest release into `/Applications`
 (`--quit`, `--relaunch`, `--force`). `scripts/setup-login-update.sh` installs a launch agent
