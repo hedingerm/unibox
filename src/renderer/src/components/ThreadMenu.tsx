@@ -13,6 +13,7 @@ import {
   ForwardIcon,
   InboxIcon,
   LabelIcon,
+  ReplyAllIcon,
   ReplyIcon,
   SpamIcon,
   TrashIcon,
@@ -50,6 +51,7 @@ export function ThreadMenu({ x, y, onClose }: ThreadMenuProps): React.JSX.Elemen
     settings,
     followUps,
     openReply,
+    openReplyAll,
     openForward
   } = useUnibox()
   const { available, applied, inboxLabelId, currentLabelId } = useThreadLabels()
@@ -136,6 +138,12 @@ export function ThreadMenu({ x, y, onClose }: ThreadMenuProps): React.JSX.Elemen
         icon={<ReplyIcon size={14} />}
         disabled={count !== 1 || !thread}
         onClick={() => run(openReply)}
+      />
+      <MenuItem
+        label={t('toolbar.replyAll')}
+        icon={<ReplyAllIcon size={14} />}
+        disabled={count !== 1 || !thread}
+        onClick={() => run(openReplyAll)}
       />
       <MenuItem
         label={t('toolbar.forward')}

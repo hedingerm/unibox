@@ -16,6 +16,7 @@ import {
   MailIcon,
   MailOpenIcon,
   MoreIcon,
+  ReplyAllIcon,
   ReplyIcon,
   SettleIcon,
   SpamIcon,
@@ -194,6 +195,7 @@ export function ReaderToolbar(): React.JSX.Element {
     unspamSelected,
     toggleReadSelected,
     openReply,
+    openReplyAll,
     openForward,
     openSettle,
     settleOne,
@@ -227,6 +229,17 @@ export function ReaderToolbar(): React.JSX.Element {
         onClick={() => void openReply()}
       >
         <ReplyIcon />
+      </button>
+      <button
+        type="button"
+        className="icon-button"
+        data-tip={tip(t('toolbar.replyAll'), 'A')}
+        aria-label={t('toolbar.replyAll')}
+        aria-keyshortcuts="A"
+        disabled={count !== 1 || !thread}
+        onClick={() => void openReplyAll()}
+      >
+        <ReplyAllIcon />
       </button>
       <button
         type="button"

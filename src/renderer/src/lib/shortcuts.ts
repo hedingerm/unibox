@@ -42,6 +42,7 @@ export type ShortcutId =
   | 'settle'
   | 'compose'
   | 'reply'
+  | 'replyAll'
   | 'forward'
 
 export interface ShortcutDefinition {
@@ -89,6 +90,7 @@ export const SHORTCUTS: readonly ShortcutDefinition[] = [
 
   { id: 'compose', keys: ['c', 'mod+n'], group: 'compose', label: 'shortcuts.compose' },
   { id: 'reply', keys: ['r'], group: 'compose', label: 'shortcuts.reply' },
+  { id: 'replyAll', keys: ['a'], group: 'compose', label: 'shortcuts.replyAll' },
   { id: 'forward', keys: ['f'], group: 'compose', label: 'shortcuts.forward' }
 ]
 

@@ -20,6 +20,7 @@ import type {
   DraftInput,
   DraftKind,
   DraftSummary,
+  EmailAddress,
   SettleDecision,
   SyncStatus,
   Identity,
@@ -38,6 +39,7 @@ import { parseMailto } from '@shared/mailto'
 import { t } from './i18n'
 import { api } from './lib/bridge'
 import { buildForwardHtml, forwardSubject } from './lib/compose'
+import { replyRecipients } from './lib/reply'
 import { plainTextToHtml } from './lib/sanitize'
 import { errorMessage } from './lib/errors'
 import type { AdminPage } from './lib/admin-pages'
@@ -278,6 +280,8 @@ interface UniboxActions {
   /** Moves the inline reply into the floating window, text and all. */
   popOutCompose: (patch: Partial<ComposeSeed>) => void
   openReply: (messageId?: string) => Promise<void>
+  /** Like `openReply`, with everyone else on the mail in copy. */
+  openReplyAll: (messageId?: string) => Promise<void>
   /** Opens a forward of the given message, or of the thread's last one. */
   openForward: (messageId?: string) => Promise<void>
   /** Reopens a stored draft in the compose window it was written in. */
@@ -1205,31 +1209,39 @@ export function UniboxProvider({ children }: { children: ReactNode }): React.JSX
     [identities, openCompose]
   )
 
-  const openReply = useCallback(
-    async (messageId?: string) => {
+  const startReply = useCallback(
+    async (messageId: string | undefined, all: boolean) => {
       const target = messageId
         ? thread?.messages.find((message) => message.id === messageId)
         : thread?.messages[thread.messages.length - 1]
       if (!target) return
       const identity = await api.invoke('identities:forReply', target.id)
-      const recipients =
-        target.direction === 'outgoing'
-          ? target.to
-          : target.replyTo.length > 0
-            ? target.replyTo
-            : [target.from]
+      const list = identities.length > 0 ? identities : await api.invoke('identities:list')
+      const own = [...list.map((entry) => entry.email), ...accounts.map((entry) => entry.email)]
+      const { to, cc } = replyRecipients(target, all, own)
+      const emails = (addresses: EmailAddress[]): string =>
+        addresses.map((address) => address.email).join(', ')
       await openCompose({
         kind: 'reply',
         // A reply belongs to the conversation it answers, so it opens in it.
         mode: 'inline',
         accountId: target.accountId,
         identity,
-        to: recipients.map((address) => address.email).join(', '),
+        to: emails(to),
+        cc: emails(cc),
         subject: target.subject.startsWith('Re: ') ? target.subject : `Re: ${target.subject}`,
         replyToMessageId: target.id
       })
     },
-    [thread, openCompose]
+    [thread, identities, accounts, openCompose]
+  )
+  const openReply = useCallback(
+    (messageId?: string) => startReply(messageId, false),
+    [startReply]
+  )
+  const openReplyAll = useCallback(
+    (messageId?: string) => startReply(messageId, true),
+    [startReply]
   )
 
   const openForward = useCallback(
@@ -1401,6 +1413,7 @@ export function UniboxProvider({ children }: { children: ReactNode }): React.JSX
       changeLabelsSelected,
       openCompose,
       openReply,
+      openReplyAll,
       openForward,
       openDraft,
       saveDraft,
@@ -1488,6 +1501,7 @@ export function UniboxProvider({ children }: { children: ReactNode }): React.JSX
       changeLabelsSelected,
       openCompose,
       openReply,
+      openReplyAll,
       openForward,
       openDraft,
       saveDraft,

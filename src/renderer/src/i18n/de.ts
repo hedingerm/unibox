@@ -58,6 +58,7 @@ export const de = {
     archive: 'Archivieren',
     delete: 'Löschen',
     reply: 'Antworten',
+    replyAll: 'Allen antworten',
     forward: 'Weiterleiten',
     labels: 'Labels',
     markUnread: 'Als ungelesen markieren',
@@ -182,6 +183,7 @@ export const de = {
     detailsDate: 'Datum:',
     detailsSubject: 'Betreff:',
     reply: 'Antworten',
+    replyAll: 'Allen antworten',
     moreActions: 'Aktionen zu dieser Nachricht',
     showOriginal: 'Original anzeigen',
     showQuote: 'Zitierten Text anzeigen',
@@ -606,6 +608,7 @@ export const de = {
     settle: 'Einsortieren',
     compose: 'Neue E-Mail',
     reply: 'Antworten',
+    replyAll: 'Allen antworten',
     forward: 'Weiterleiten',
     commands: {
       label: 'Befehlspalette',

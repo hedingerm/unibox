@@ -4,10 +4,11 @@ import { SYSTEM_LABELS } from '@shared/types'
 import { labelName, t } from '../i18n'
 import { dueInWorkingDays, formatFollowUpDue, isOverdue } from '../lib/followup'
 import { avatarColors, displayName, formatListDate, initials } from '../lib/format'
+import { replyRecipients } from '../lib/reply'
 import { useUnibox } from '../state'
 import { Compose } from './Compose'
 import { MessageView, type FullMessage } from './MessageView'
-import { CheckIcon, CloseIcon, ForwardIcon, HourglassIcon, ReplyIcon, StarIcon } from './Icons'
+import { CheckIcon, CloseIcon, ForwardIcon, HourglassIcon, ReplyAllIcon, ReplyIcon, StarIcon } from './Icons'
 import { ReaderToolbar } from './Toolbar'
 
 /**
@@ -186,6 +187,7 @@ export function ReadingPane(): React.JSX.Element {
     threads,
     accounts,
     openReply,
+    openReplyAll,
     openForward,
     identities,
     selectedThreadIds,
@@ -225,6 +227,14 @@ export function ReadingPane(): React.JSX.Element {
     ) ??
     identities.find((identity) => identity.accountId === thread.accountId && identity.isDefault) ??
     identities.find((identity) => identity.accountId === thread.accountId)
+
+  // Reply-all only earns its place when it would reach someone a reply does not.
+  const replyAllAdds = last
+    ? replyRecipients(last, true, [
+        ...identities.map((identity) => identity.email),
+        ...accounts.map((item) => item.email)
+      ]).cc.length > 0
+    : false
 
   // The list row flips the moment the star is clicked; reading it from there
   // keeps the header in step instead of waiting for the thread to reload.
@@ -291,6 +301,16 @@ export function ReadingPane(): React.JSX.Element {
               })}
             </span>
           </button>
+          {replyAllAdds ? (
+            <button
+              type="button"
+              className="reading__reply-button reading__reply-button--compact"
+              onClick={() => void openReplyAll()}
+            >
+              <ReplyAllIcon size={14} color="var(--text-faint)" />
+              <span>{t('reading.replyAll')}</span>
+            </button>
+          ) : null}
           <button
             type="button"
             className="reading__reply-button reading__reply-button--compact"

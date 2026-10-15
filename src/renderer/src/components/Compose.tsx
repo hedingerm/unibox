@@ -1383,7 +1383,9 @@ export function Compose(): React.JSX.Element | null {
             title={t('compose.editFields')}
             onClick={() => setFieldsOpen((value) => !value)}
           >
-            <span>{t('compose.replyingTo', { recipients: to })}</span>
+            <span>{t('compose.replyingTo', {
+                recipients: [to, cc].filter((value) => value.trim() !== '').join(', ')
+              })}</span>
             <ChevronIcon size={11} open={fieldsOpen} />
           </button>
           {savedStatus}

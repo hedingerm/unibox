@@ -53,6 +53,7 @@ async function seedInbox(): Promise<void> {
     subject: 'Offerte Onlineshop',
     from: { name: 'Sandra Keller', email: 's.keller@keller-farben.ch' },
     to: [{ name: null, email: account.email }],
+    cc: [{ name: 'Lisa Keller', email: 'l.keller@keller-farben.ch' }],
     date: Date.parse('2026-08-18T10:12:00.000Z'),
     labelRemoteIds: [SYSTEM_LABELS.inbox],
     body: { html: null, text: 'Wann können Sie starten?' }
@@ -112,6 +113,27 @@ describe('replying inside the conversation', () => {
     expect(document.querySelector('.overlay')).toBeNull()
     expect(screen.getByRole('heading', { name: 'Offerte Onlineshop' })).toBeTruthy()
     expect(reply.textContent).toContain('s.keller@keller-farben.ch')
+  })
+
+  it('puts everyone else on the mail in copy when answering all', async () => {
+    boot()
+    await seedInbox()
+    const user = userEvent.setup()
+    render(
+      <StrictMode>
+        <UniboxProvider>
+          <App />
+        </UniboxProvider>
+      </StrictMode>
+    )
+    const list = await screen.findByRole('listbox')
+    await waitFor(() => expect(within(list).getAllByRole('option')).toHaveLength(2))
+    await user.click(within(list).getAllByRole('option')[1]!)
+    const footer = await waitFor(() => document.querySelector('.reading__reply') as HTMLElement)
+    await user.click(within(footer).getByRole('button', { name: 'Allen antworten' }))
+
+    const reply = await screen.findByRole('dialog', { name: 'Antworten' })
+    expect(reply.textContent).toContain('s.keller@keller-farben.ch, l.keller@keller-farben.ch')
   })
 
   it('hands the written text to the window when it is popped out', async () => {

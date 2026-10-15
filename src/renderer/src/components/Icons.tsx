@@ -80,6 +80,16 @@ export function ReplyIcon({ size = 16, color = 'var(--text-muted)' }: IconProps)
   )
 }
 
+export function ReplyAllIcon({ size = 16, color = 'var(--text-muted)' }: IconProps): React.JSX.Element {
+  return (
+    <svg {...base(size, color)} aria-hidden="true">
+      <path d="M5 3L1 7l4 4" />
+      <path d="M8 3L4 7l4 4" />
+      <path d="M4 7h6a5 5 0 015 5v1" />
+    </svg>
+  )
+}
+
 export function ForwardIcon({ size = 16, color = 'var(--text-muted)' }: IconProps): React.JSX.Element {
   return (
     <svg {...base(size, color)} aria-hidden="true">

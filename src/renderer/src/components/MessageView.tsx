@@ -18,7 +18,7 @@ import { useAction } from '../lib/useAction'
 import { useUnibox } from '../state'
 import { AttachmentPreview } from './AttachmentPreview'
 import { LinkMenu } from './LinkMenu'
-import { AttachIcon, ChevronIcon, CodeIcon, ForwardIcon, MoreIcon, ReplyIcon } from './Icons'
+import { AttachIcon, ChevronIcon, CodeIcon, ForwardIcon, MoreIcon, ReplyAllIcon, ReplyIcon } from './Icons'
 import { ContextMenu, MenuDivider, MenuItem, type MenuPosition } from './ContextMenu'
 import { MessageSourceDialog } from './MessageSource'
 
@@ -254,7 +254,7 @@ function fullAddresses(addresses: FullMessage['to']): string {
 
 export function MessageView({ message }: { message: FullMessage }): React.JSX.Element {
   const colors = avatarColors(message.from)
-  const { setSearchText, identities, accounts, openReply, openForward } = useUnibox()
+  const { setSearchText, identities, accounts, openReply, openReplyAll, openForward } = useUnibox()
   const [details, setDetails] = useState(false)
   const [menu, setMenu] = useState<MenuPosition | null>(null)
   const [sourceOpen, setSourceOpen] = useState(false)
@@ -351,6 +351,14 @@ export function MessageView({ message }: { message: FullMessage }): React.JSX.El
             onClick={() => {
               setMenu(null)
               void openReply(message.id)
+            }}
+          />
+          <MenuItem
+            label={t('reading.replyAll')}
+            icon={<ReplyAllIcon size={14} />}
+            onClick={() => {
+              setMenu(null)
+              void openReplyAll(message.id)
             }}
           />
           <MenuItem

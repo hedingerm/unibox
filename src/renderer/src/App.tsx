@@ -87,6 +87,7 @@ export function App(): React.JSX.Element {
     spamSelected,
     toggleReadSelected,
     openReply,
+    openReplyAll,
     openForward,
     openCompose,
     openDraft,
@@ -121,6 +122,7 @@ export function App(): React.JSX.Element {
       spam: () => void spamSelected(),
       toggleRead: () => void toggleReadSelected(),
       reply: () => void openReply(),
+      replyAll: () => void openReplyAll(),
       forward: () => void openForward(),
       // Same deal as the toolbar button: one conversation settles on the spot
       // with an undoable toast, anything else goes through the review sheet.
@@ -154,6 +156,7 @@ export function App(): React.JSX.Element {
       spamSelected,
       toggleReadSelected,
       openReply,
+      openReplyAll,
       openForward,
       openCompose,
       openDraft,

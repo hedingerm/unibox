@@ -58,6 +58,7 @@ describe('shortcut registry', () => {
       i: 'toggleRead',
       u: 'toggleRead',
       r: 'reply',
+      a: 'replyAll',
       f: 'forward',
       s: 'settle',
       b: 'snooze',
