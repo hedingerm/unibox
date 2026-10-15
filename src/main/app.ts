@@ -1257,8 +1257,11 @@ export class UniboxApp {
       'templates:remove': async (id): Promise<void> => this.store.templates.remove(id),
 
       'compose:send': async (draft: OutboxDraft): Promise<OutboxItem> => this.send.enqueue(draft),
-      'compose:schedule': async (draft: OutboxDraft, sendAt: number): Promise<OutboxItem> =>
-        this.send.schedule(draft, sendAt),
+      'compose:schedule': async (draft: OutboxDraft, sendAt: number): Promise<OutboxItem> => {
+        // The queue sends anything already due, so a past time would go out now.
+        if (sendAt <= Date.now()) throw new Error('Der Zeitpunkt liegt in der Vergangenheit.')
+        return this.send.schedule(draft, sendAt)
+      },
       'compose:cancel': async (outboxId): Promise<void> => {
         this.send.cancel(outboxId)
       },

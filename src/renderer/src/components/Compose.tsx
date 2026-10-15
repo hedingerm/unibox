@@ -37,6 +37,7 @@ import { loadInlineImages } from '../lib/inline-images'
 import { collectAttachments, hasFiles } from '../lib/attachments'
 import { htmlToPlainText } from '../lib/text'
 import { useAction } from '../lib/useAction'
+import { toLocalInput } from '../lib/snooze'
 import { FOLLOW_UP_DAY_CHOICES, isFollowUpCandidate } from '@shared/followup'
 import { MAX_ATTACHMENT_MB } from '@shared/attachments'
 import { useFocusTrap } from '../hooks/useFocusTrap'
@@ -227,6 +228,8 @@ export function Compose(): React.JSX.Element | null {
   // but the editor; a reply already knows who it goes to and about what.
   const [fieldsOpen, setFieldsOpen] = useState(compose?.mode !== 'inline')
   const [scheduleAt, setScheduleAt] = useState('')
+  // The earliest pickable moment, taken when the picker opens.
+  const [scheduleMin, setScheduleMin] = useState('')
   /**
    * What the user decided about the reminder, or `null` while they have not
    * touched it. Kept apart from the suggestion so that typing another recipient
@@ -676,14 +679,26 @@ export function Compose(): React.JSX.Element | null {
     saveTimer.current = null
   }
 
+  /**
+   * Ends the window and removes its stored draft. A save still under way may
+   * be the one that mints the id, so it is waited for — otherwise it would
+   * land after the removal and leave the draft behind.
+   */
+  const dropDraft = async (): Promise<void> => {
+    stopSaving()
+    await saving.current
+    const id = draftId.current
+    draftId.current = null
+    if (id) await discardDraft(id)
+  }
+
   // Sending is the one action where losing the cause also loses the message —
   // the failure is reported in the footer, next to the button that triggered it.
   const send = useAction(async () => {
     const draft = buildDraft()
     if (!draft) return
     await api.invoke('compose:send', draft)
-    stopSaving()
-    if (draftId.current) await discardDraft(draftId.current)
+    await dropDraft()
     await reloadOutbox()
     closeCompose()
   })
@@ -694,8 +709,7 @@ export function Compose(): React.JSX.Element | null {
     const timestamp = Date.parse(scheduleAt)
     if (!Number.isFinite(timestamp)) return
     await api.invoke('compose:schedule', draft, timestamp)
-    stopSaving()
-    if (draftId.current) await discardDraft(draftId.current)
+    await dropDraft()
     await reloadOutbox()
     closeCompose()
   })
@@ -708,10 +722,7 @@ export function Compose(): React.JSX.Element | null {
       draftText(htmlRef.current).trim() !== '' ||
       attachments.length > 0
     if (written && !window.confirm(t('compose.confirmDiscard'))) return
-    stopSaving()
-    const id = draftId.current
-    draftId.current = null
-    if (id) void discardDraft(id)
+    void dropDraft()
     closeCompose()
   }
 
@@ -1219,7 +1230,10 @@ export function Compose(): React.JSX.Element | null {
           aria-label={t('compose.sendOptions')}
           title={t('compose.sendLater')}
           aria-expanded={scheduleOpen}
-          onClick={() => setScheduleOpen((value) => !value)}
+          onClick={() => {
+            setScheduleMin(toLocalInput(Date.now()))
+            setScheduleOpen((value) => !value)
+          }}
         >
           <ChevronIcon size={12} open color="currentColor" />
         </button>
@@ -1233,6 +1247,7 @@ export function Compose(): React.JSX.Element | null {
             <input
               id="compose-schedule"
               type="datetime-local"
+              min={scheduleMin}
               value={scheduleAt}
               onChange={(event) => setScheduleAt(event.target.value)}
             />

@@ -79,11 +79,16 @@ export function parseCustomSnooze(value: string): number | null {
   return Number.isNaN(date.getTime()) ? null : date.getTime()
 }
 
-/** The value a `datetime-local` input starts on: the default offer, prefilled. */
-export function customSnoozeDefault(now = Date.now()): string {
-  const date = new Date(defaultSnoozeAt(now))
+/** A timestamp as a `datetime-local` value, in local time. */
+export function toLocalInput(time: number): string {
+  const date = new Date(time)
   const pad = (value: number): string => String(value).padStart(2, '0')
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
     date.getHours()
   )}:${pad(date.getMinutes())}`
+}
+
+/** The value a `datetime-local` input starts on: the default offer, prefilled. */
+export function customSnoozeDefault(now = Date.now()): string {
+  return toLocalInput(defaultSnoozeAt(now))
 }
