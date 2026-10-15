@@ -1,6 +1,6 @@
 {
   "name": "unibox",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "Unified desktop inbox for Gmail accounts and Resend domains",
   "main": "./out/main/index.js",
   "author": "Manuel Hedinger",
